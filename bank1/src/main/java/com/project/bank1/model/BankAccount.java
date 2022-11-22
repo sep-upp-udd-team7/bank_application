@@ -32,10 +32,10 @@ public class BankAccount {
     @Column(name = "reserved_funds")
     private Double reservedFunds;
 
-    @ManyToOne
-    @JoinColumn(referencedColumnName = "client_id", name="client_id")
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
+    @JoinColumn(name = "client_id")
     private Client client;   // 1 klijent moze da ima vise racuna
 
     @OneToMany(mappedBy="bankAccount")
-    private List<Transaction> transactions = new ArrayList<>();
+    private List<Transaction> transactions;
 }

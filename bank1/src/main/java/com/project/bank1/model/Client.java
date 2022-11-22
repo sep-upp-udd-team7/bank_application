@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Getter
@@ -34,7 +35,6 @@ public class Client {
     @Column(name = "password")
     private String password;
 
-    @OneToOne(mappedBy = "client")
-    @Column(nullable = false)
-    private BankAccount bankAccount;
+    @OneToMany(mappedBy="client")
+    private List<BankAccount> bankAccounts;
 }
