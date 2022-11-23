@@ -1,14 +1,12 @@
 spring:
   application:
-    name: bank1-service
-  main:
-    allow-circular-references: true
+    name: bank2-service
   datasource:
     driverClassName: org.postgresql.Driver
     initialization-mode: always
     password: ${PASS}
     platform: postgres
-    url: jdbc:postgresql://localhost:5432/bank1
+    url: jdbc:postgresql://localhost:5432/bank2
     username: postgres
   jpa:
     defer-datasource-initialization: true
@@ -21,13 +19,11 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
-    show-sql: true
-
-
+    show-sql: false
 jwt:
   secret: security
 
 server:
-  port: 8090
+  port: 8091
   servlet:
-    context-path: /bank1
+    context-path: /bank2

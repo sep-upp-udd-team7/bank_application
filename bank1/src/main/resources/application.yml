@@ -1,6 +1,8 @@
 spring:
   application:
     name: bank1-service
+  main:
+    allow-circular-references: true
   datasource:
     driverClassName: org.postgresql.Driver
     initialization-mode: always
@@ -19,11 +21,13 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
-    show-sql: false
+    show-sql: true
+
+
 jwt:
   secret: security
 
 server:
   port: 8090
   servlet:
-    context-path: /pcc
+    context-path: /bank1
