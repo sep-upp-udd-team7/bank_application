@@ -41,9 +41,11 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/personal-info']);
       },
       error => {
-        this.notification = {msgType: 'error', msgBody: 'Pogrešan email ili lozinka!'};
+        this.notification = {msgType: 'error', msgBody: 'Invalid email or password!'};
       });
-    } 
+    }else{
+      this.notification = {msgType: 'error', msgBody: 'Password must be 8 or more characters!'};
+    }
   }
 
   signup(){

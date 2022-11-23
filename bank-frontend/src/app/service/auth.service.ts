@@ -35,4 +35,21 @@ export class AuthService {
         
       }));
   }
+
+  signup(user){
+
+    const body = {
+      'email': user.email,
+      'password': user.password,
+      'name': user.name,
+      'isCompany': user.isCompany
+    };
+    console.log(body)
+
+    return this._http.post<any>(`${this.auth_url}/signup`, body)
+
+  }
+
+
+  
 }
