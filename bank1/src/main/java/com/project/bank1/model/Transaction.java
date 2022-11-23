@@ -21,8 +21,8 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "merchant_id")
-    private String merchantId;  // ?
+//    @Column(name = "merchant_id")
+//    private String merchantId;  // ?
 
     @Column(name = "amount")
     private Double amount;
