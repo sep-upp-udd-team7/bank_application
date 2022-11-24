@@ -47,14 +47,8 @@ export class LoginComponent implements OnInit {
       this.notification = {msgType: 'error', msgBody: 'Password must be 8 or more characters!'};
     }
 
-    let loginDto = {
-      "email":  this.form.get("email")?.value,
-      "password": this.form.get("password")?.value,
-    }
-    this.authService.login(loginDto).subscribe(
+    this.authService.login(this.form.value).subscribe(
       data => {
-        alert('ok')
-        console.log(data)
         this.router.navigate(['/personal-info'])
       }, 
       err => {

@@ -45,19 +45,19 @@ public class ClientServiceImpl implements ClientService {
     private TokenUtils tokenUtils;
 
     @Override
-    public void registerClient(ClientRegistrationDto dto) throws Exception {
+    public UserTokenStateDto registerClient(ClientRegistrationDto dto) throws Exception {
         Client client = new ClientMapper().mapClientRegistrationDtoToClient(dto);
         if(!dto.getPassword().equals(dto.getReenteredPassword())){
             throw new Exception("Passwords do not match");
         }
         client.setPassword(passwordEncoder.encode(dto.getPassword()));
         client.setLastPasswordResetDate(Timestamp.from(Instant.now()));
-        ClientType clientType = clientTypeService.findClientTypeByName(findClientTypeName(dto.isCompany()));
+        ClientType clientType = clientTypeService.findClientTypeByName(findClientTypeName(dto.getIsCompany()));
         if (clientType == null) {
             throw new Exception("Client type is not found");
         }
         client.setClientType(clientType);
-        if (dto.isCompany()) {
+        if (dto.getIsCompany()) {
             client.setMerchantId("1");
             client.setMerchantPassword("1011");
         }
@@ -67,6 +67,10 @@ public class ClientServiceImpl implements ClientService {
         VerificationToken verificationToken = new VerificationToken(client);
         verificationTokenService.saveVerificationToken(verificationToken);
         clientRepository.save(client);
+
+        String jwt = tokenUtils.generateToken(client.getUsername(), client.getClientType().getName());
+        int expiresIn = tokenUtils.getExpiredIn();
+        return new UserTokenStateDto(jwt, expiresIn);
     }
 
     private String findClientTypeName(boolean isCompany) {
@@ -89,7 +93,7 @@ public class ClientServiceImpl implements ClientService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         Client client = (Client) authentication.getPrincipal();
 
-        String jwt = tokenUtils.generateToken(client.getUsername());
+        String jwt = tokenUtils.generateToken(client.getUsername(), client.getClientType().getName());
         int expiresIn = tokenUtils.getExpiredIn();
         return new UserTokenStateDto(jwt, expiresIn);
     }

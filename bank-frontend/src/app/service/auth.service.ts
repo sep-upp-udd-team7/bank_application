@@ -41,15 +41,20 @@ export class AuthService {
     const body = {
       'email': user.email,
       'password': user.password,
+      'reenteredPassword': user.reenteredPassword,
       'name': user.name,
       'isCompany': user.isCompany
     };
     console.log(body)
 
     return this._http.post<any>(`${this.auth_url}/registration`, body)
-
+      .pipe(map((res: any) => {
+        let decoded: any = jwt_decode(res.accessToken)
+        localStorage.setItem("user", decoded.sub)
+        localStorage.setItem("role", decoded.role)
+        localStorage.setItem("jwt", res.accessToken);
+        
+      }));
   }
 
-
-  
 }
