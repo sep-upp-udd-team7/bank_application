@@ -8,5 +8,5 @@ public class ClientRegistrationDto {
     private String email;
     private String password;
     private String reenteredPassword;
-    private boolean isCompany;
+    private Boolean isCompany;
 }

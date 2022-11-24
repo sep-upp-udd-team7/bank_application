@@ -28,7 +28,7 @@ export class SignUpComponent implements OnInit {
       name: ['', Validators.compose([Validators.required, Validators.minLength(4), Validators.maxLength(64)])],
       email: ['', Validators.compose([Validators.required, Validators.minLength(4), Validators.maxLength(64)])],
       password: ['', Validators.compose([Validators.required, Validators.minLength(8), Validators.maxLength(64)])],
-      reEnteredPassword: ['', Validators.compose([Validators.required, Validators.minLength(8), Validators.maxLength(64)])],
+      reenteredPassword: ['', Validators.compose([Validators.required, Validators.minLength(8), Validators.maxLength(64)])],
       isCompany: [false, Validators.compose([])]
 
     });
@@ -36,14 +36,14 @@ export class SignUpComponent implements OnInit {
   }
 
   submit(){
+    console.log(this.form.value)
     if(this.form.valid){
-
       this.authService.signup(this.form.value)
       .subscribe(data => {
-        console.log(data)
         this.router.navigate(['/personal-info']);
       },
       error => {
+        console.log(error.error)
         this.notification = {msgType: 'error', msgBody: 'Something went wrong!'};
       });
     }else{

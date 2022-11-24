@@ -28,8 +28,7 @@ public class ClientController {
     @RequestMapping(method = RequestMethod.POST, value = "/registration")
     public ResponseEntity<?> registerClient(@RequestBody ClientRegistrationDto dto) {
         try {
-            clientService.registerClient(dto);
-            return new ResponseEntity<>("Client " + dto.getEmail() + " created!", HttpStatus.CREATED);
+            return new ResponseEntity<>(clientService.registerClient(dto), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
