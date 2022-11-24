@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/clients", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ClientController {
-
     @Autowired
     private ClientService clientService;
 
@@ -26,7 +25,7 @@ public class ClientController {
         return new ResponseEntity<>("OK!", HttpStatus.OK);
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/auth/registration")
+    @RequestMapping(method = RequestMethod.POST, value = "/registration")
     public ResponseEntity<?> registerClient(@RequestBody ClientRegistrationDto dto) {
         try {
             clientService.registerClient(dto);
@@ -36,7 +35,7 @@ public class ClientController {
         }
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/auth/login")
+    @RequestMapping(method = RequestMethod.POST, value = "/login")
     public ResponseEntity<?> registerClient(@RequestBody LoginDto dto) {
         try {
             return new ResponseEntity<>(clientService.login(dto), HttpStatus.OK);
