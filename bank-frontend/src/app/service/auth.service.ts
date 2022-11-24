@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map } from 'rxjs/operators';
 import jwt_decode from "jwt-decode";
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,7 @@ export class AuthService {
 
   constructor(private _http: HttpClient) { }
 
-  private auth_url = 'https://localhost:8080/api/auth';
+  private auth_url = environment.backendUrl + 'clients';
 
 
   login(user) {
@@ -37,7 +38,6 @@ export class AuthService {
   }
 
   signup(user){
-
     const body = {
       'email': user.email,
       'password': user.password,
@@ -46,7 +46,7 @@ export class AuthService {
     };
     console.log(body)
 
-    return this._http.post<any>(`${this.auth_url}/signup`, body)
+    return this._http.post<any>(`${this.auth_url}/registration`, body)
 
   }
 
