@@ -18,10 +18,11 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Client implements UserDetails {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Table(name="clients")
+public class Client extends Model implements UserDetails {
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private Long id;
 
     // // /// ///
     @Column(name = "merchant_id")
@@ -43,7 +44,7 @@ public class Client implements UserDetails {
     @OneToMany(mappedBy="client")
     private List<BankAccount> bankAccounts;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "client_type_id")
     private ClientType clientType = new ClientType();
 
