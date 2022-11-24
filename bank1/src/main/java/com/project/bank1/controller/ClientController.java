@@ -35,7 +35,7 @@ public class ClientController {
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/login")
-    public ResponseEntity<?> registerClient(@RequestBody LoginDto dto) {
+    public ResponseEntity<?> login(@RequestBody LoginDto dto) {
         try {
             return new ResponseEntity<>(clientService.login(dto), HttpStatus.OK);
         } catch (Exception e) {
