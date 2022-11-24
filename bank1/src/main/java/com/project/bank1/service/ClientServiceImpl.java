@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -47,6 +48,9 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public UserTokenStateDto registerClient(ClientRegistrationDto dto) throws Exception {
         Client client = new ClientMapper().mapClientRegistrationDtoToClient(dto);
+        if(getAllEmails().contains(dto.getEmail())) {
+            throw new Exception("Email is not unique");
+        }
         if(!dto.getPassword().equals(dto.getReenteredPassword())){
             throw new Exception("Passwords do not match");
         }
@@ -57,6 +61,7 @@ public class ClientServiceImpl implements ClientService {
             throw new Exception("Client type is not found");
         }
         client.setClientType(clientType);
+        // TODO SD: generisati merchant id i merchant password
         if (dto.getIsCompany()) {
             client.setMerchantId("1");
             client.setMerchantPassword("1011");
@@ -71,6 +76,14 @@ public class ClientServiceImpl implements ClientService {
         String jwt = tokenUtils.generateToken(client.getUsername(), client.getClientType().getName());
         int expiresIn = tokenUtils.getExpiredIn();
         return new UserTokenStateDto(jwt, expiresIn);
+    }
+
+    private Collection<String> getAllEmails() {
+        Collection<String> emails = new ArrayList<>();
+        for (Client c: clientRepository.findAll()) {
+            emails.add(c.getEmail());
+        }
+        return emails;
     }
 
     private String findClientTypeName(boolean isCompany) {

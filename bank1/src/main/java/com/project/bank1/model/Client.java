@@ -35,7 +35,7 @@ public class Client extends Model implements UserDetails {
     @Column(name = "name")
     private String name; // naziv firme ili ime i prezime
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
 
     @Column(name = "password")
