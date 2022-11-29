@@ -1,3 +1,4 @@
+import { CardInfoComponent } from './components/card-info/card-info.component';
 import { PersonalInfoComponent } from './components/personal-info/personal-info.component';
 import { SignUpComponent } from './components/sign-up/sign-up.component';
 import { LoginComponent } from './components/login/login.component';
@@ -18,6 +19,10 @@ const routes: Routes = [
   {
     path: 'personal-info',
     component: PersonalInfoComponent,
+  },
+  {
+    path: 'card-info',
+    component: CardInfoComponent,
   },
   
 ];
