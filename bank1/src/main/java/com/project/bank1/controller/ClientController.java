@@ -2,6 +2,7 @@ package com.project.bank1.controller;
 
 import com.project.bank1.dto.ClientRegistrationDto;
 import com.project.bank1.dto.LoginDto;
+import com.project.bank1.dto.RequestDto;
 import com.project.bank1.mapper.ClientMapper;
 import com.project.bank1.model.Client;
 import com.project.bank1.service.interfaces.ClientService;
@@ -43,4 +44,6 @@ public class ClientController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+
 }

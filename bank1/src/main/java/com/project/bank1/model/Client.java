@@ -19,10 +19,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name="clients")
-public class Client extends Model implements UserDetails {
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private Long id;
+public class Client implements UserDetails {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     // // /// ///
     @Column(name = "merchant_id")

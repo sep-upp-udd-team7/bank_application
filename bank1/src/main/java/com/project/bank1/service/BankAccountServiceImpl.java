@@ -1,11 +1,14 @@
 package com.project.bank1.service;
 
+import com.project.bank1.dto.AcquirerResponseDto;
+import com.project.bank1.dto.RequestDto;
 import com.project.bank1.model.BankAccount;
 import com.project.bank1.model.Client;
 import com.project.bank1.model.CreditCard;
 import com.project.bank1.model.Transaction;
 import com.project.bank1.repository.BankAccountRepository;
 import com.project.bank1.service.interfaces.BankAccountService;
+import com.project.bank1.service.interfaces.ClientService;
 import com.project.bank1.service.interfaces.CreditCardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,8 @@ public class BankAccountServiceImpl implements BankAccountService {
     private BankAccountRepository bankAccountRepository;
     @Autowired
     private CreditCardService creditCardService;
+    @Autowired
+    private ClientService clientService;
 
     @Override
     public BankAccount addBankAccount(Client client) {
@@ -32,4 +37,14 @@ public class BankAccountServiceImpl implements BankAccountService {
         bankAccountRepository.save(bankAccount);
         return bankAccount;
     }
+
+    @Override
+    public AcquirerResponseDto validateAcquirer(RequestDto dto) {
+
+
+
+        return null;
+    }
+
+
 }

@@ -1,8 +1,6 @@
 package com.project.bank1.service;
 
-import com.project.bank1.dto.ClientRegistrationDto;
-import com.project.bank1.dto.LoginDto;
-import com.project.bank1.dto.UserTokenStateDto;
+import com.project.bank1.dto.*;
 import com.project.bank1.mapper.ClientMapper;
 import com.project.bank1.model.BankAccount;
 import com.project.bank1.model.Client;
@@ -110,4 +108,6 @@ public class ClientServiceImpl implements ClientService {
         int expiresIn = tokenUtils.getExpiredIn();
         return new UserTokenStateDto(jwt, expiresIn);
     }
+
+
 }
