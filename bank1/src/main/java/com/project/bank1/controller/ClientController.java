@@ -6,6 +6,7 @@ import com.project.bank1.dto.RequestDto;
 import com.project.bank1.mapper.ClientMapper;
 import com.project.bank1.model.Client;
 import com.project.bank1.service.interfaces.ClientService;
+import com.project.bank1.service.interfaces.CreditCardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,15 +17,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 @RestController
 @RequestMapping(value = "/clients", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ClientController {
     @Autowired
     private ClientService clientService;
+    @Autowired
+    private CreditCardService creditCardService;
 
     @RequestMapping(method = RequestMethod.GET, value = "/getAll")
     public ResponseEntity<?> getAllClients() {
-        return new ResponseEntity<>("OK!", HttpStatus.OK);
+
+        return new ResponseEntity<>(creditCardService.addCreditCard("Sanja Drinic"), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/registration")

@@ -31,3 +31,7 @@ server:
   port: 8090
   servlet:
     context-path: /bank1
+payment:
+  url: 'http://localhost:4200/card-info'
+bank:
+  pan: 525150

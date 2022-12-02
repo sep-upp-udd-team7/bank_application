@@ -64,9 +64,7 @@ public class ClientServiceImpl implements ClientService {
             client.setMerchantId("1");
             client.setMerchantPassword("1011");
         }
-        List<BankAccount> bankAccounts = new ArrayList<>();
-        bankAccounts.add(bankAccountService.addBankAccount(client));
-        client.setBankAccounts(bankAccounts);
+        client.setBankAccounts(bankAccountService.addBankAccount(client));
         VerificationToken verificationToken = new VerificationToken(client);
         verificationTokenService.saveVerificationToken(verificationToken);
         clientRepository.save(client);
@@ -107,6 +105,19 @@ public class ClientServiceImpl implements ClientService {
         String jwt = tokenUtils.generateToken(client.getUsername(), client.getClientType().getName());
         int expiresIn = tokenUtils.getExpiredIn();
         return new UserTokenStateDto(jwt, expiresIn);
+    }
+
+    @Override
+    public boolean validateMerchantData(String merchantId, String merchantPassword) {
+        Client client = clientRepository.findByMerchantId(merchantId);
+        if (client == null) {
+            System.out.println("Client is not found or client is not registered as company");
+            return false;
+        }
+        if (!client.getMerchantPassword().equals(merchantPassword)) {
+            return  false;
+        }
+        return true;
     }
 
 

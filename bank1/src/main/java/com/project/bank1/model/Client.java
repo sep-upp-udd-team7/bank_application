@@ -41,8 +41,8 @@ public class Client implements UserDetails {
     @Column(name = "password")
     private String password;
 
-    @OneToMany(mappedBy="client")
-    private List<BankAccount> bankAccounts;
+    @OneToOne(mappedBy="client")
+    private BankAccount bankAccounts;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "client_type_id")
