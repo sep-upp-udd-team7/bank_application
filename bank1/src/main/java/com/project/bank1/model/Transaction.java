@@ -19,11 +19,7 @@ import java.util.Date;
 @Table(name="transactions")
 public class Transaction {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-//    @Column(name = "merchant_id")
-//    private String merchantId;  // ?
 
     @Column(name = "amount")
     private Double amount;

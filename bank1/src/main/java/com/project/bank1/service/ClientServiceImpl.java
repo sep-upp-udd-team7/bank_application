@@ -20,14 +20,21 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Service
 public class ClientServiceImpl implements ClientService {
+    private static int merchantIdStringLength = 30;
+    private static int merchantPasswordStringLength = 100;
     @Autowired
     private ClientRepository clientRepository;
     @Autowired
@@ -59,10 +66,11 @@ public class ClientServiceImpl implements ClientService {
             throw new Exception("Client type is not found");
         }
         client.setClientType(clientType);
-        // TODO SD: generisati merchant id i merchant password
         if (dto.getIsCompany()) {
-            client.setMerchantId("1");
-            client.setMerchantPassword("1011");
+            String merchantId = generateRandomString(merchantIdStringLength);
+            String merchantPassword = generateRandomString(merchantPasswordStringLength);
+            client.setMerchantId(merchantId);
+            client.setMerchantPassword(merchantPassword);
         }
         client.setBankAccounts(bankAccountService.addBankAccount(client));
         VerificationToken verificationToken = new VerificationToken(client);
@@ -72,6 +80,20 @@ public class ClientServiceImpl implements ClientService {
         String jwt = tokenUtils.generateToken(client.getUsername(), client.getClientType().getName());
         int expiresIn = tokenUtils.getExpiredIn();
         return new UserTokenStateDto(jwt, expiresIn);
+    }
+
+    private String generateRandomString(int targetStringLength) {
+        int leftLimit = 97; // letter 'a'
+        int rightLimit = 122; // letter 'z'
+        Random random = new Random();
+
+        String generatedString = random.ints(leftLimit, rightLimit + 1)
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+
+        System.out.println(generatedString);
+        return generatedString;
     }
 
     private Collection<String> getAllEmails() {

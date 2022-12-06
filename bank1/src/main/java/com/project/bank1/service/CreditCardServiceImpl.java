@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @Service
 public class CreditCardServiceImpl implements CreditCardService {
-    private static Integer numberOfYearsOfCardValidity = 5;
+    private static Integer numberOfYearsOfCreditCardValidity = 5;
     private static Long numberOfDigitsThatDoesNotIdentifiesBank = 10000000000L;
     private static Long numberOfCcvDigitsThatDoesNotIdentifiesBank = 1000L;
     @Autowired
@@ -88,10 +88,9 @@ public class CreditCardServiceImpl implements CreditCardService {
         List<String> expDate = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
         String expMonth = String.valueOf(now.getMonthValue());
-        String expYear = String.valueOf(now.getYear() + numberOfYearsOfCardValidity);
+        String expYear = String.valueOf(now.getYear() + numberOfYearsOfCreditCardValidity);
         expDate.add(expMonth);
         expDate.add(expYear);
-        System.out.println(expDate);
         return expDate;
     }
 

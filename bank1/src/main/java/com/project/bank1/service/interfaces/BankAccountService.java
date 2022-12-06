@@ -12,4 +12,6 @@ public interface BankAccountService {
     AcquirerResponseDto validateAcquirer(RequestDto dto);
 
     Object validateIssuer(IssuerRequestDto dto);
+
+    BankAccount findBankAccountByMerchantId(String merchantId);
 }

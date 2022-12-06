@@ -9,7 +9,7 @@ public class RequestDto {
     private String merchantId;
     private String merchantPassword;
     private Double amount;
-    private Long merchantOrderId;
+    private String merchantOrderId;
     private LocalDateTime merchantTimestamp;
     private String successUrl;
     private String failedUrl;
