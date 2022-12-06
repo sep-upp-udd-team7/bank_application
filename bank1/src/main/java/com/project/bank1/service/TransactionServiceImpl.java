@@ -20,6 +20,10 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public Transaction createAcquirerTransaction(RequestDto dto) {
         BankAccount acquirerBankAccount = bankAccountService.findBankAccountByMerchantId(dto.getMerchantId());
+        if (acquirerBankAccount == null) {
+            System.out.println("Acquirer bank account not found!");
+            return null;
+        }
         Transaction transaction = new Transaction();
         // TODO: ispraviti generisanje transaction id tj. payment id
         transaction.setId(generateTransactionId(10));
@@ -33,6 +37,28 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setStatus(TransactionStatus.CREATED);
         transactionRepository.save(transaction);
         return transaction;
+    }
+
+    @Override
+    public Transaction createIssuerTransaction(RequestDto dto, BankAccount issuerBankAccount) {
+        Transaction transaction = new Transaction();
+        // TODO: ispraviti generisanje transaction id tj. payment id
+        transaction.setId(generateTransactionId(10));
+        transaction.setBankAccount(issuerBankAccount);
+        transaction.setAmount(dto.getAmount());
+        transaction.setErrorURL(dto.getErrorUrl());
+        transaction.setFailedURL(dto.getFailedUrl());
+        transaction.setSuccessURL(dto.getSuccessUrl());
+        transaction.setMerchantOrderId(dto.getMerchantOrderId());
+        transaction.setMerchantTimestamp(dto.getMerchantTimestamp());
+        transaction.setStatus(TransactionStatus.CREATED);
+        transactionRepository.save(transaction);
+        return transaction;
+    }
+
+    @Override
+    public void save(Transaction transaction) {
+        transactionRepository.save(transaction);
     }
 
     private Long generateTransactionId(int lengthOfPaymentId) {

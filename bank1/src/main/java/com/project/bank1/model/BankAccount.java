@@ -20,7 +20,7 @@ public class BankAccount {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "credit_card_id")
     private CreditCard creditCard;  // fizicka kartica
 

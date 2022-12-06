@@ -10,5 +10,5 @@ public class IssuerRequestDto {
     private String mm;
     private String yy;
     private String cvv;
-    private String paymentId;
+    private String paymentId;  // ?
 }

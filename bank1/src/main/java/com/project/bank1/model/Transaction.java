@@ -19,6 +19,7 @@ import java.util.Date;
 @Table(name="transactions")
 public class Transaction {
     @Id
+    @Column(unique = true)
     private Long id;
 
     @Column(name = "amount")

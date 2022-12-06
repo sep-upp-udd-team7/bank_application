@@ -21,13 +21,21 @@ public class BankAccountController {
 
     @RequestMapping(method = RequestMethod.POST, value = "/validateAcquirer")
     public ResponseEntity<?> validateAcquirer(@RequestBody RequestDto dto) {
-        return new ResponseEntity<>(bankAccountService.validateAcquirer(dto), HttpStatus.OK);
+        try {
+            return new ResponseEntity<>(bankAccountService.validateAcquirer(dto), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 
     @RequestMapping(method = RequestMethod.POST, value = "/validateIssuer")
     public ResponseEntity<?> validateIssuer(@RequestBody IssuerRequestDto dto) {
-        return new ResponseEntity<>(bankAccountService.validateIssuer(dto), HttpStatus.OK);
+        try {
+            return new ResponseEntity<>(bankAccountService.validateIssuer(dto), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 }

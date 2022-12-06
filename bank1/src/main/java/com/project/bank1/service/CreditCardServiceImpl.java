@@ -38,20 +38,21 @@ public class CreditCardServiceImpl implements CreditCardService {
     }
 
     @Override
-    public boolean validateIssuerCreditCard(IssuerRequestDto dto) {
+    public CreditCard validateIssuerCreditCard(IssuerRequestDto dto) {
         for (CreditCard cc: creditCardRepository.findAll()) {
             if (cc.getPan().equals(dto.getPan()) && cc.getCardHolderName().equals(dto.getCardHolderName())
-                && cc.getCvv().equals(dto.getCvv())) {
+                && cc.getCvv().equals(dto.getCvv()) && cc.getMm().equals(dto.getMm()) && cc.getYy().equals(dto.getYy()) ) {
                 if (checkExpirationDate(Integer.valueOf(dto.getMm()), Integer.valueOf(dto.getYy()))) {
                     System.out.println("Credit card has not expired");
+                    return cc;
                 } else {
                     System.out.println("Credit card has expired");
+                    return null;
                 }
-                System.out.println("The issuer's credit card credentials are correct");
-                return true;
             }
         }
-        return false;
+        System.out.println("Credit card with the entered data was not found");
+        return null;
     }
 
     private boolean checkExpirationDate(Integer mm, Integer yy) {

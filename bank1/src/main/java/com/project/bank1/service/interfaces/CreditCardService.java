@@ -6,5 +6,5 @@ import com.project.bank1.model.CreditCard;
 public interface CreditCardService {
     CreditCard addCreditCard(String clientsName);
 
-    boolean validateIssuerCreditCard(IssuerRequestDto dto);
+    CreditCard validateIssuerCreditCard(IssuerRequestDto dto);
 }

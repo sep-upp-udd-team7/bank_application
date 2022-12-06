@@ -54,11 +54,14 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    public AcquirerResponseDto validateAcquirer(RequestDto dto) {
+    public AcquirerResponseDto validateAcquirer(RequestDto dto) throws Exception {
         if (!clientService.validateMerchantData(dto.getMerchantId(), dto.getMerchantPassword())) {
             return null;
         }
         Transaction transaction = transactionService.createAcquirerTransaction(dto);
+        if (transaction == null) {
+            throw new Exception("Error when creating acquirer's transaction");
+        }
         String paymentUrl = environment.getProperty("bank.frontend.url") + environment
                 .getProperty("bank.frontend.credit-card-data-module") + "/" + transaction.getId();
         System.out.println(" ********** URL - " + paymentUrl);
@@ -71,21 +74,59 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     public BankAccount findBankAccountByMerchantId(String merchantId) {
-        for (BankAccount bankAccount: bankAccountRepository.findAll()) {
-            if (bankAccount.getClient().getMerchantId().equals(merchantId)) {
-                return bankAccount;
+        for (BankAccount ba: bankAccountRepository.findAll()) {
+            if (ba.getClient().getMerchantId().equals(merchantId)) {
+                return ba;
             }
         }
         return null;
     }
 
     @Override
-    public Object validateIssuer(IssuerRequestDto dto) {
-        // TODO: Object???
-        if (!creditCardService.validateIssuerCreditCard(dto)) {
-            System.out.println("The issuer's credit card credentials are NOT correct");
-            return null;
+    public Object validateIssuer(IssuerRequestDto dto) throws Exception {
+        if (!isIssuerInSameBankAsAcquirer(dto.getPan())) {
+            // TODO SD: proslediti zahtev na PCC
+            throw new Exception("Issuer and acquirer are not in the same bank!");
+        }
+        CreditCard issuerCreditCard = creditCardService.validateIssuerCreditCard(dto);
+        if (issuerCreditCard == null) {
+            throw new Exception("The issuer's credit card credentials are NOT correct or or the credit card has expired");
+        }
+        // TODO: kreiraj transakciji za kupca i skini sredstva sa racuna
+        BankAccount issuerBankAccount = findIssuerBankAccountByCreditCardId(issuerCreditCard.getId());
+        if (issuerBankAccount == null) {
+            throw new Exception("Issuer bank account not found");
+        }
+        Transaction transaction = transactionService.createIssuerTransaction(dto.getRequestDto(), issuerBankAccount);
+        if (issuerBankAccount.getAvailableFunds() < dto.getRequestDto().getAmount()) {
+            transaction.setStatus(TransactionStatus.FAILED);
+            transactionService.save(transaction);
+            throw new Exception("The customer's bank account does not have enough money");
+        }
+        reserveFunds(issuerBankAccount, dto.getRequestDto().getAmount());
+        return null;
+    }
+
+    private void reserveFunds(BankAccount issuerBankAccount, Double amount) {
+        // TODO SD: da li treba smanjiti raspoloziva sredstva odmah?
+        Double newReservedFunds = issuerBankAccount.getReservedFunds() + amount;
+        issuerBankAccount.setReservedFunds(newReservedFunds);
+        bankAccountRepository.save(issuerBankAccount);
+    }
+
+    private BankAccount findIssuerBankAccountByCreditCardId(Long id) {
+        for (BankAccount ba: bankAccountRepository.findAll()) {
+            if (ba.getCreditCard().getId() == id) {
+                return ba;
+            }
         }
         return null;
     }
+
+    private boolean isIssuerInSameBankAsAcquirer(String pan) {
+        String issuersBankPan = pan.substring(0, 6);
+        String acquirersBankPan = environment.getProperty("bank.pan");
+        return issuersBankPan.equals(acquirersBankPan);
+    }
+
 }

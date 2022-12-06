@@ -9,9 +9,9 @@ import com.project.bank1.model.Client;
 public interface BankAccountService {
     BankAccount addBankAccount(Client client);
 
-    AcquirerResponseDto validateAcquirer(RequestDto dto);
-
-    Object validateIssuer(IssuerRequestDto dto);
+    AcquirerResponseDto validateAcquirer(RequestDto dto) throws Exception;
 
     BankAccount findBankAccountByMerchantId(String merchantId);
+
+    Object validateIssuer(IssuerRequestDto dto) throws Exception;
 }
