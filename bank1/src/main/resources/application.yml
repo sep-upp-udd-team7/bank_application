@@ -35,5 +35,5 @@ server:
 bank:
   pan: 525150
   frontend:
-    url: 'http://localhost:4200/'
+    url: 'http://localhost:3000/'
     credit-card-data-module: 'credit-card'
