@@ -61,6 +61,16 @@ public class TransactionServiceImpl implements TransactionService {
         transactionRepository.save(transaction);
     }
 
+    @Override
+    public Transaction findByPaymentId(String paymentId) {
+        for (Transaction t: transactionRepository.findAll()) {
+            if (t.getId().equals(paymentId)) {
+                return t;
+            }
+        }
+        return null;
+    }
+
     private Long generateTransactionId(int lengthOfPaymentId) {
         double rndNum = Math.random();
         System.out.println(rndNum);

@@ -7,10 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = "/accounts", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -29,10 +26,10 @@ public class BankAccountController {
     }
 
 
-    @RequestMapping(method = RequestMethod.POST, value = "/validateIssuer")
-    public ResponseEntity<?> validateIssuer(@RequestBody IssuerRequestDto dto) {
+    @RequestMapping(method = RequestMethod.POST, value = "/validateIssuer/{paymentId}")
+    public ResponseEntity<?> validateIssuer(@RequestBody IssuerRequestDto dto, @PathVariable String paymentId) {
         try {
-            return new ResponseEntity<>(bankAccountService.validateIssuer(dto), HttpStatus.OK);
+            return new ResponseEntity<>(bankAccountService.validateIssuer(dto, paymentId), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }

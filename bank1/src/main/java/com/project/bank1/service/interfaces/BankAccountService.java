@@ -13,5 +13,5 @@ public interface BankAccountService {
 
     BankAccount findBankAccountByMerchantId(String merchantId);
 
-    Object validateIssuer(IssuerRequestDto dto) throws Exception;
+    Object validateIssuer(IssuerRequestDto dto, String paymentId) throws Exception;
 }

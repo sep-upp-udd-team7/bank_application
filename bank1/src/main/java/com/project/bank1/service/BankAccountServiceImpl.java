@@ -83,34 +83,61 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    public Object validateIssuer(IssuerRequestDto dto) throws Exception {
+    public Object validateIssuer(IssuerRequestDto dto, String paymentId) throws Exception {
+        // TODO SD: -------------------- REFAKTORISATI OVO! --------------------------------
         if (!isIssuerInSameBankAsAcquirer(dto.getPan())) {
-            // TODO SD: proslediti zahtev na PCC
-            throw new Exception("Issuer and acquirer are not in the same bank!");
+            // TODO: proslediti zahtev na PCC
+            throw new Exception("Issuer and acquirer are not in the same bank! - PCC is implementing...");
         }
+
         CreditCard issuerCreditCard = creditCardService.validateIssuerCreditCard(dto);
         if (issuerCreditCard == null) {
             throw new Exception("The issuer's credit card credentials are NOT correct or or the credit card has expired");
         }
-        // TODO: kreiraj transakciji za kupca i skini sredstva sa racuna
         BankAccount issuerBankAccount = findIssuerBankAccountByCreditCardId(issuerCreditCard.getId());
         if (issuerBankAccount == null) {
             throw new Exception("Issuer bank account not found");
         }
-        Transaction transaction = transactionService.createIssuerTransaction(dto.getRequestDto(), issuerBankAccount);
+        Transaction transactionIssuer = transactionService.createIssuerTransaction(dto.getRequestDto(), issuerBankAccount);
         if (issuerBankAccount.getAvailableFunds() < dto.getRequestDto().getAmount()) {
-            transaction.setStatus(TransactionStatus.FAILED);
-            transactionService.save(transaction);
+            transactionIssuer.setStatus(TransactionStatus.FAILED);
+            transactionService.save(transactionIssuer);
             throw new Exception("The customer's bank account does not have enough money");
         }
         reserveFunds(issuerBankAccount, dto.getRequestDto().getAmount());
+        transactionIssuer.setStatus(TransactionStatus.SUCCESS);
+        transactionService.save(transactionIssuer);
+
+        // prebacivanje sredstava na racun prodavca
+        Transaction transactionAcquirer = transactionService.findByPaymentId(paymentId);
+        if (transactionAcquirer == null) {
+            rollbackReservedFunds(issuerBankAccount, dto.getRequestDto().getAmount());
+            transactionIssuer.setStatus(TransactionStatus.FAILED);
+            transactionService.save(transactionIssuer);
+            throw new Exception("Transfer of money to the acquirer's account failed");
+        }
+        BankAccount acquirerBankAccount = transactionAcquirer.getBankAccount();
+        Double newAvailableFundsAcquirer = acquirerBankAccount.getAvailableFunds() + dto.getRequestDto().getAmount();
+        acquirerBankAccount.setAvailableFunds(newAvailableFundsAcquirer);
+        transactionAcquirer.setStatus(TransactionStatus.SUCCESS);
+        transactionService.save(transactionAcquirer);
+
         return null;
     }
 
+    private void rollbackReservedFunds(BankAccount issuerBankAccount, Double amount) {
+        Double newReservedFunds = issuerBankAccount.getReservedFunds() - amount;
+        issuerBankAccount.setReservedFunds(newReservedFunds);
+        Double newAvailableFunds = issuerBankAccount.getAvailableFunds() + amount;
+        issuerBankAccount.setAvailableFunds(newAvailableFunds);
+        bankAccountRepository.save(issuerBankAccount);
+    }
+
     private void reserveFunds(BankAccount issuerBankAccount, Double amount) {
-        // TODO SD: da li treba smanjiti raspoloziva sredstva odmah?
         Double newReservedFunds = issuerBankAccount.getReservedFunds() + amount;
         issuerBankAccount.setReservedFunds(newReservedFunds);
+        Double newAvailableFunds = issuerBankAccount.getAvailableFunds() - amount;
+        issuerBankAccount.setAvailableFunds(newAvailableFunds);
         bankAccountRepository.save(issuerBankAccount);
     }
 

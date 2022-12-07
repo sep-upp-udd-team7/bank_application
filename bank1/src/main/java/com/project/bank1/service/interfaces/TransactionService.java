@@ -10,4 +10,6 @@ public interface TransactionService {
     Transaction createIssuerTransaction(RequestDto dto, BankAccount issuerBankAccount);
 
     void save(Transaction transaction);
+
+    Transaction findByPaymentId(String paymentId);
 }
