@@ -18,7 +18,7 @@ import java.util.UUID;
 public class CreditCardServiceImpl implements CreditCardService {
     private static Integer numberOfYearsOfCreditCardValidity = 5;
     private static Long numberOfDigitsThatDoesNotIdentifiesBank = 10000000000L;
-    private static Long numberOfCcvDigitsThatDoesNotIdentifiesBank = 1000L;
+    private static Long numberOfCcvDigitsThatDoesNotIdentifiesBank = 10000L;
     @Autowired
     private CreditCardRepository creditCardRepository;
     @Autowired
