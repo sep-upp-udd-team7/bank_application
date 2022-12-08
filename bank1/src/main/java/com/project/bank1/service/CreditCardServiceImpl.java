@@ -43,15 +43,15 @@ public class CreditCardServiceImpl implements CreditCardService {
             if (cc.getPan().equals(dto.getPan()) && cc.getCardHolderName().equals(dto.getCardHolderName())
                 && cc.getCvv().equals(dto.getCvv()) && cc.getMm().equals(dto.getMm()) && cc.getYy().equals(dto.getYy()) ) {
                 if (checkExpirationDate(Integer.valueOf(dto.getMm()), Integer.valueOf(dto.getYy()))) {
-                    System.out.println("Credit card has not expired");
+                    System.out.println("Issuer's credit card has not expired");
                     return cc;
                 } else {
-                    System.out.println("Credit card has expired");
+                    System.out.println("Issuer's credit card has expired");
                     return null;
                 }
             }
         }
-        System.out.println("Credit card with the entered data was not found");
+        System.out.println("Issuer's credit card with the entered data was not found");
         return null;
     }
 

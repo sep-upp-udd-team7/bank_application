@@ -20,7 +20,7 @@ import java.util.Date;
 public class Transaction {
     @Id
     @Column(unique = true)
-    private Long id;
+    private String id;
 
     @Column(name = "amount")
     private Double amount;

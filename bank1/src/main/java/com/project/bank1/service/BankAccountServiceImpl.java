@@ -64,7 +64,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         }
         String paymentUrl = environment.getProperty("bank.frontend.url") + environment
                 .getProperty("bank.frontend.credit-card-data-module") + "/" + transaction.getId();
-        System.out.println(" ********** URL - " + paymentUrl);
 
         AcquirerResponseDto response = new AcquirerResponseDto();
         response.setPaymentId(String.valueOf(transaction.getId()));

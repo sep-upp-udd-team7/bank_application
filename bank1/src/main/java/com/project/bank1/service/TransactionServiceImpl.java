@@ -26,7 +26,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
         Transaction transaction = new Transaction();
         // TODO: ispraviti generisanje transaction id tj. payment id
-        transaction.setId(generateTransactionId(10));
+        transaction.setId(String.valueOf(generateTransactionId(10)));
         transaction.setBankAccount(acquirerBankAccount);
         transaction.setAmount(dto.getAmount());
         transaction.setErrorURL(dto.getErrorUrl());
@@ -43,7 +43,7 @@ public class TransactionServiceImpl implements TransactionService {
     public Transaction createIssuerTransaction(RequestDto dto, BankAccount issuerBankAccount) {
         Transaction transaction = new Transaction();
         // TODO: ispraviti generisanje transaction id tj. payment id
-        transaction.setId(generateTransactionId(10));
+        transaction.setId(String.valueOf(generateTransactionId(10)));
         transaction.setBankAccount(issuerBankAccount);
         transaction.setAmount(dto.getAmount());
         transaction.setErrorURL(dto.getErrorUrl());
