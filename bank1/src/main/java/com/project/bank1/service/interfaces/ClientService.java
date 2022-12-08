@@ -1,11 +1,11 @@
 package com.project.bank1.service.interfaces;
 
-import com.project.bank1.dto.ClientRegistrationDto;
-import com.project.bank1.dto.LoginDto;
-import com.project.bank1.dto.UserTokenStateDto;
+import com.project.bank1.dto.*;
 
 public interface ClientService {
     UserTokenStateDto registerClient(ClientRegistrationDto dto) throws Exception;
 
     UserTokenStateDto login(LoginDto dto) throws Exception;
+
+    boolean validateMerchantData(String merchantId, String merchantPassword);
 }

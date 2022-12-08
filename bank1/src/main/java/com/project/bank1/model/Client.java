@@ -19,10 +19,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name="clients")
-public class Client extends Model implements UserDetails {
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private Long id;
+public class Client implements UserDetails {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     // // /// ///
     @Column(name = "merchant_id")
@@ -41,8 +41,8 @@ public class Client extends Model implements UserDetails {
     @Column(name = "password")
     private String password;
 
-    @OneToMany(mappedBy="client")
-    private List<BankAccount> bankAccounts;
+    @OneToOne(mappedBy="client")
+    private BankAccount bankAccounts;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "client_type_id")

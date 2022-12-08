@@ -31,3 +31,9 @@ server:
   port: 8090
   servlet:
     context-path: /bank1
+
+bank:
+  pan: 525150
+  frontend:
+    url: 'http://localhost:3000/'
+    credit-card-data-module: 'credit-card'
