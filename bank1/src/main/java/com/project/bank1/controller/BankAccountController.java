@@ -16,7 +16,7 @@ public class BankAccountController {
     @Autowired
     BankAccountService bankAccountService;
 
-    @RequestMapping(method = RequestMethod.POST, value = "/validateAcquirer")
+    @RequestMapping(method = RequestMethod.POST, value = "/validateAcquirer", produces=MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> validateAcquirer(@RequestBody RequestDto dto) {
         try {
             return new ResponseEntity<>(bankAccountService.validateAcquirer(dto), HttpStatus.OK);
