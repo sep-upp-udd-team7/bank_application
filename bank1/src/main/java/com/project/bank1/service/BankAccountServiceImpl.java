@@ -119,6 +119,10 @@ public class BankAccountServiceImpl implements BankAccountService {
         transactionAcquirer.setStatus(TransactionStatus.SUCCESS);
         transactionService.save(transactionAcquirer);
 
+        // TODO: da li onda treba smanjiti rezervisana sredstva kupca?
+        issuerBankAccount.setReservedFunds(issuerBankAccount.getReservedFunds() - transactionAcquirer.getAmount());
+        bankAccountRepository.save(issuerBankAccount);
+
         return null;
     }
 
