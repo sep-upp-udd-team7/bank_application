@@ -40,17 +40,17 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Transaction createIssuerTransaction(RequestDto dto, BankAccount issuerBankAccount) {
+    public Transaction createIssuerTransaction(Transaction acquirer, BankAccount issuerBankAccount) {
         Transaction transaction = new Transaction();
         // TODO: ispraviti generisanje transaction id tj. payment id
         transaction.setId(String.valueOf(generateTransactionId(10)));
         transaction.setBankAccount(issuerBankAccount);
-        transaction.setAmount(dto.getAmount());
-        transaction.setErrorURL(dto.getErrorUrl());
-        transaction.setFailedURL(dto.getFailedUrl());
-        transaction.setSuccessURL(dto.getSuccessUrl());
-        transaction.setMerchantOrderId(dto.getMerchantOrderId());
-        transaction.setMerchantTimestamp(dto.getMerchantTimestamp());
+        transaction.setAmount(acquirer.getAmount());
+        transaction.setErrorURL(acquirer.getErrorURL());
+        transaction.setFailedURL(acquirer.getFailedURL());
+        transaction.setSuccessURL(acquirer.getSuccessURL());
+        transaction.setMerchantOrderId(acquirer.getMerchantOrderId());
+        transaction.setMerchantTimestamp(acquirer.getMerchantTimestamp());
         transaction.setStatus(TransactionStatus.CREATED);
         transactionRepository.save(transaction);
         return transaction;

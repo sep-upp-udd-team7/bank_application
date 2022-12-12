@@ -21,7 +21,7 @@ const routes: Routes = [
     component: PersonalInfoComponent,
   },
   {
-    path: 'card-info',
+    path: 'credit-card/:paymentId',
     component: CardInfoComponent,
   },
   

@@ -26,10 +26,10 @@ public class BankAccountController {
     }
 
 
-    @RequestMapping(method = RequestMethod.POST, value = "/validateIssuer/{paymentId}")
-    public ResponseEntity<?> validateIssuer(@RequestBody IssuerRequestDto dto, @PathVariable String paymentId) {
+    @RequestMapping(method = RequestMethod.POST, value = "/validateIssuer", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> validateIssuer(@RequestBody IssuerRequestDto dto) {
         try {
-            return new ResponseEntity<>(bankAccountService.validateIssuer(dto, paymentId), HttpStatus.OK);
+            return new ResponseEntity<>(bankAccountService.validateIssuer(dto), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
