@@ -58,7 +58,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         if (!clientService.validateMerchantData(dto.getMerchantId(), dto.getMerchantPassword())) {
             return null;
         }
-        Transaction transaction = transactionService.createAcquirerTransaction(dto);
+        Transaction transaction = transactionService.createTransaction(dto);
         if (transaction == null) {
             throw new Exception("Error when creating acquirer's transaction");
         }
@@ -97,30 +97,30 @@ public class BankAccountServiceImpl implements BankAccountService {
             throw new Exception("Issuer bank account not found");
         }
 
-        Transaction transactionAcquirer = transactionService.findByPaymentId(dto.getPaymentId());
-        if (transactionAcquirer == null) {
+        Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
+        if (transaction == null) {
             throw new Exception("Transaction with id " + dto.getPaymentId() + " not found");
         }
+        transaction.setIssuerBankAccountId(issuerBankAccount.getId());
 
-        Transaction transactionIssuer = transactionService.createIssuerTransaction(transactionAcquirer, issuerBankAccount);
-        if (issuerBankAccount.getAvailableFunds() < transactionIssuer.getAmount()) {
-            transactionIssuer.setStatus(TransactionStatus.FAILED);
-            transactionService.save(transactionIssuer);
+        if (issuerBankAccount.getAvailableFunds() < transaction.getAmount()) {
+            transaction.setStatus(TransactionStatus.FAILED);
+            transactionService.save(transaction);
             throw new Exception("The customer's bank account does not have enough money");
         }
-        reserveFunds(issuerBankAccount, transactionIssuer.getAmount());
-        transactionIssuer.setStatus(TransactionStatus.SUCCESS);
-        transactionService.save(transactionIssuer);
+        reserveFunds(issuerBankAccount, transaction.getAmount());
+        transaction.setStatus(TransactionStatus.SUCCESS);
+        transactionService.save(transaction);
 
         // prebacivanje sredstava na racun prodavca
-        BankAccount acquirerBankAccount = transactionAcquirer.getBankAccount();
-        Double newAvailableFundsAcquirer = acquirerBankAccount.getAvailableFunds() + transactionAcquirer.getAmount();
+        BankAccount acquirerBankAccount = transaction.getBankAccount();
+        Double newAvailableFundsAcquirer = acquirerBankAccount.getAvailableFunds() + transaction.getAmount();
         acquirerBankAccount.setAvailableFunds(newAvailableFundsAcquirer);
-        transactionAcquirer.setStatus(TransactionStatus.SUCCESS);
-        transactionService.save(transactionAcquirer);
+        transaction.setStatus(TransactionStatus.SUCCESS);
+        transactionService.save(transaction);
 
         // TODO: da li onda treba smanjiti rezervisana sredstva kupca?
-        issuerBankAccount.setReservedFunds(issuerBankAccount.getReservedFunds() - transactionAcquirer.getAmount());
+        issuerBankAccount.setReservedFunds(issuerBankAccount.getReservedFunds() - transaction.getAmount());
         bankAccountRepository.save(issuerBankAccount);
 
         return null;

@@ -18,7 +18,7 @@ public class TransactionServiceImpl implements TransactionService {
     private BankAccountService bankAccountService;
 
     @Override
-    public Transaction createAcquirerTransaction(RequestDto dto) {
+    public Transaction createTransaction(RequestDto dto) {
         BankAccount acquirerBankAccount = bankAccountService.findBankAccountByMerchantId(dto.getMerchantId());
         if (acquirerBankAccount == null) {
             System.out.println("Acquirer bank account not found!");
@@ -34,23 +34,6 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setSuccessURL(dto.getSuccessUrl());
         transaction.setMerchantOrderId(dto.getMerchantOrderId());
         transaction.setMerchantTimestamp(dto.getMerchantTimestamp());
-        transaction.setStatus(TransactionStatus.CREATED);
-        transactionRepository.save(transaction);
-        return transaction;
-    }
-
-    @Override
-    public Transaction createIssuerTransaction(Transaction acquirer, BankAccount issuerBankAccount) {
-        Transaction transaction = new Transaction();
-        // TODO: ispraviti generisanje transaction id tj. payment id
-        transaction.setId(String.valueOf(generateTransactionId(10)));
-        transaction.setBankAccount(issuerBankAccount);
-        transaction.setAmount(acquirer.getAmount());
-        transaction.setErrorURL(acquirer.getErrorURL());
-        transaction.setFailedURL(acquirer.getFailedURL());
-        transaction.setSuccessURL(acquirer.getSuccessURL());
-        transaction.setMerchantOrderId(acquirer.getMerchantOrderId());
-        transaction.setMerchantTimestamp(acquirer.getMerchantTimestamp());
         transaction.setStatus(TransactionStatus.CREATED);
         transactionRepository.save(transaction);
         return transaction;

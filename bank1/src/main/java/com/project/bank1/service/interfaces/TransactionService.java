@@ -5,9 +5,7 @@ import com.project.bank1.model.BankAccount;
 import com.project.bank1.model.Transaction;
 
 public interface TransactionService {
-    Transaction createAcquirerTransaction(RequestDto dto);
-
-    Transaction createIssuerTransaction(Transaction acquirer, BankAccount issuerBankAccount);
+    Transaction createTransaction(RequestDto dto);
 
     void save(Transaction transaction);
 
