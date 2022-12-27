@@ -3,6 +3,7 @@ package com.project.bank1.controller;
 import com.project.bank1.dto.ClientRegistrationDto;
 import com.project.bank1.dto.LoginDto;
 import com.project.bank1.dto.RequestDto;
+import com.project.bank1.dto.TestDto;
 import com.project.bank1.mapper.ClientMapper;
 import com.project.bank1.model.Client;
 import com.project.bank1.service.interfaces.ClientService;
@@ -53,5 +54,11 @@ public class ClientController {
         }
     }
 
+
+    @RequestMapping(method = RequestMethod.POST, value = "/pay")
+    public Boolean testPay(@RequestBody TestDto dto) {
+        System.out.println("AAAAAA" + dto.getAmount());
+        return true;
+    }
 
 }
