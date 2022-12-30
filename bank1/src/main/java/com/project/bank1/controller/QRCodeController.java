@@ -1,6 +1,7 @@
 package com.project.bank1.controller;
 
 import com.google.zxing.WriterException;
+import com.project.bank1.dto.GenerateQRCodeDTO;
 import com.project.bank1.dto.LoginDto;
 import com.project.bank1.dto.ValidateQRCodeDTO;
 import com.project.bank1.service.interfaces.QRCodeService;
@@ -58,9 +59,9 @@ public class QRCodeController {
 
 
     @GetMapping("/getQRCode")
-    public String qrCodeGenerator() throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
+    public String qrCodeGenerator(@RequestBody GenerateQRCodeDTO dto) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
 
-        String qr = qrService.qrCodeGenerator("SDADA");
+        String qr = qrService.qrCodeGenerator(dto);
         System.out.println("novi qr:" + qr);
 
         String decodirano = new String(qr);
@@ -68,20 +69,17 @@ public class QRCodeController {
         return "qrcode";
     }
 
-    @GetMapping("/readQRCode")
-    public ResponseEntity<?> readQRCode(@RequestBody ValidateQRCodeDTO qr) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
+    @GetMapping("/validateQRCode")
+    public ResponseEntity<?> validateQRCode(@RequestBody ValidateQRCodeDTO qr) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
 
         try {
-            String decodedText = qrService.decodeQRCode(qr.getQr());
-            JSONObject json = new JSONObject(decodedText);
-            System.out.println("JSON:" + json);
-            System.out.println("CIJENA:" + json.getString("Cena"));
-            if(decodedText == null) {
+            Boolean decodedText = qrService.decodeQRCode(qr.getQr());
+
+            if(!decodedText) {
                 System.out.println("No QR Code found in the image");
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(false, HttpStatus.OK);
             } else {
-                System.out.println("Decoded text = " + decodedText);
-                return new ResponseEntity<>(decodedText, HttpStatus.OK);
+                return new ResponseEntity<>(true, HttpStatus.OK);
             }
         } catch (IOException e) {
             System.out.println("Could not decode QR Code, IOException :: " + e.getMessage());

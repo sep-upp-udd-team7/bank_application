@@ -9,6 +9,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.project.bank1.dto.GenerateQRCodeDTO;
 import com.project.bank1.service.interfaces.QRCodeService;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -55,18 +56,18 @@ public class QRCodeServiceImpl implements QRCodeService {
     }
 
     @Override
-    public String qrCodeGenerator(String text) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public String qrCodeGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException {
 
-        String filePath = "QRCode.png";
+        String filePath = "C:\\SEP-UPP-UDD\\bank_application\\bank1\\src\\main\\resources\\qr.png";
         String charset = "UTF-8";
         Map hintMap = new HashMap();
         hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
 
         Map<String, String> qrCodeDataMap = Map.of(
-                "Primalac", "Kristina Stojic",
-                "Cena", "500 din",
-                "Racun primaoca", "64879546546",
-                "Id transakcije", "5465412"
+                "Primalac", dto.getReceiver(),
+                "Cena", dto.getAmount().toString(),
+                "Racun primaoca", dto.getAccountNumber(),
+                "Id transakcije", dto.getIdTransaction()
         );
 
         String jsonString = new JSONObject(qrCodeDataMap).toString();
@@ -103,7 +104,7 @@ public class QRCodeServiceImpl implements QRCodeService {
 
 
     @Override
-    public String decodeQRCode(String qr) throws IOException {
+    public Boolean decodeQRCode(String qr) throws IOException {
         byte[] decodedBytes = Base64.getMimeDecoder().decode(qr);
         BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(decodedBytes));
 
@@ -113,10 +114,18 @@ public class QRCodeServiceImpl implements QRCodeService {
         try {
             Result result = new MultiFormatReader().decode(bitmap);
             System.out.println("DEKODIRANO" + result);
-            return result.getText();
+
+            JSONObject json = new JSONObject(result.getText());
+            System.out.println("JSON:" + json);
+            System.out.println("CENA:" + json.getString("Cena"));
+
+            //TODO: provjeriti sva ostala polja i prebrojati ih
+
+            return true;
         } catch (NotFoundException e) {
             System.out.println("There is no QR code in the image");
-            return null;
-        }    }
+            return false;
+        }
+    }
 
 }
