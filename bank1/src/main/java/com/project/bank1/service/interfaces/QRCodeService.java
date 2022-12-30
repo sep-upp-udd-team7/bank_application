@@ -12,5 +12,5 @@ public interface QRCodeService {
     byte[] getQRCodeImage(String text, int width, int height) throws WriterException, IOException;
 
     String qrCodeGenerator(String text) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException;
-    String decodeQRCode(File qrCodeimage) throws IOException;
+    String decodeQRCode(String qr) throws IOException;
 }

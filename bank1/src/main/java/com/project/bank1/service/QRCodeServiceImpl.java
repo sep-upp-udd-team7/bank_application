@@ -51,8 +51,7 @@ public class QRCodeServiceImpl implements QRCodeService {
         MatrixToImageConfig con = new MatrixToImageConfig( 0xFF000002 , 0xFFFFC041 ) ;
 
         MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream,con);
-        byte[] pngData = pngOutputStream.toByteArray();
-        return pngData;
+        return pngOutputStream.toByteArray();
     }
 
     @Override
@@ -64,9 +63,10 @@ public class QRCodeServiceImpl implements QRCodeService {
         hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
 
         Map<String, String> qrCodeDataMap = Map.of(
-                "Prodavac", "Kristina Stojic",
-                "Cijena", "500 din"
-                // see next section for ´generateVerificationKey´ method
+                "Primalac", "Kristina Stojic",
+                "Cena", "500 din",
+                "Racun primaoca", "64879546546",
+                "Id transakcije", "5465412"
         );
 
         String jsonString = new JSONObject(qrCodeDataMap).toString();
@@ -75,9 +75,7 @@ public class QRCodeServiceImpl implements QRCodeService {
         BufferedImage image = ImageIO.read(new File(filePath));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(image, "png", baos);
-        byte[] imageData = baos.toByteArray();
-        String slika = Base64.getEncoder().encodeToString(baos.toByteArray());
-        return slika;
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 
     private void createQRCode(String qrCodeData,
@@ -105,15 +103,12 @@ public class QRCodeServiceImpl implements QRCodeService {
 
 
     @Override
-    public String decodeQRCode(File qrCodeimage) throws IOException {
-        byte[] decodedBytes = Base64.getMimeDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAfQAAAH0AQAAAADjreInAAACsElEQVR4Xu2bMXLcMAxF6XGR0kfQUXQ07dF0FB3B5RYZMwL4SUqwnQnjku81BkA8boUhV1qn/CPeU6yMgR8rY+DHyhj4sTIGfqyMgR8rY+DHyhj4sTIGfqyMgR8rY+DHyhj4sTIGvoJn6pzJ6sXfaclnXpKcj97yqhK+AvzOnH7vKsm79S1951dbEQ/8Ar4C/PWjdZ3KS+tSkrXzyRs+fgFfQfSt6zy/Tn7l/FEUfHz8f/Bz3tV1WM3ZMj4+/ve+ot7l82fJy9lXd3bwFeArwO/YZtcjqycNfHz8ix9ph1llix0OfqwI/Ln8px45WKvl5m8WnN+fdp1fJfHdPs0fPn6e2l/9lErlkfdqS6d/WHNd8ZOtfAw+Pv7dV3TYI7vdujd/fufUL1PZhhEfX834Cm4LmrJCHTnbprY18FuIn/HrlDm3zTyxycS/gN/C6X07pR6p3P9ufL7/NfBbuOPP7Wvh8J8s2FK6jZwug2Uzn0xvUoCPX/7O6fdHDs7uX5lsMxs5Y3PfN+tt+PgF/IK/ctUwPvz9kRQfxrrSwFeAP73fFk4l+/sjG7msJ3u+mSXfnV/4CvEn9JWl2qUk+//fmZL9/Er2MX0Y8fEvzO2ra9Ew1lueksbX51fGx5/Y96565esstrb7Si2pDR8f/zp/Hd/s3e5/S7sMJleuJ5uB360O/nT+01pEXSp+KpulejO0Y+6Bj49/81dFvasmBc1f+vr8wl8V4U/q65QqikYu9/mrmN/Ax8ePfrb3r/78e9H97638MuhMfMV3xsfH/4vvyclqDc1vk4mPj999RYfOr3rLe9oW/pWpboaPr2Z8Bd4lit+7dvmlzVY2Wfj4hdn9/wQ/VsbAj5Ux8GNlDPxYGQM/VsbAj5Ux8GNlDPxYGQM/VsbAj5Ux8GNlDPxYGePH/h+X9flyPdzEPQAAAABJRU5ErkJggg==");
-
-
+    public String decodeQRCode(String qr) throws IOException {
+        byte[] decodedBytes = Base64.getMimeDecoder().decode(qr);
         BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(decodedBytes));
+
         LuminanceSource source = new BufferedImageLuminanceSource(bufferedImage);
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-
-
 
         try {
             Result result = new MultiFormatReader().decode(bitmap);

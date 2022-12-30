@@ -1,16 +1,15 @@
 package com.project.bank1.controller;
 
 import com.google.zxing.WriterException;
+import com.project.bank1.dto.LoginDto;
+import com.project.bank1.dto.ValidateQRCodeDTO;
 import com.project.bank1.service.interfaces.QRCodeService;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 
 import java.io.File;
@@ -58,7 +57,7 @@ public class QRCodeController {
     }
 
 
-    @GetMapping("/getNoviQR")
+    @GetMapping("/getQRCode")
     public String qrCodeGenerator() throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
 
         String qr = qrService.qrCodeGenerator("SDADA");
@@ -70,23 +69,24 @@ public class QRCodeController {
     }
 
     @GetMapping("/readQRCode")
-    public String readQRCode() throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
+    public ResponseEntity<?> readQRCode(@RequestBody ValidateQRCodeDTO qr) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
 
         try {
-            File file = new File("C:\\SEP-UPP-UDD\\bank_application\\bank1\\src\\main\\resources\\QRCode.png");
-            String decodedText = qrService.decodeQRCode(file);
+            String decodedText = qrService.decodeQRCode(qr.getQr());
             JSONObject json = new JSONObject(decodedText);
             System.out.println("JSON:" + json);
-            System.out.println("CIJENA:" + json.getString("Cijena"));
+            System.out.println("CIJENA:" + json.getString("Cena"));
             if(decodedText == null) {
                 System.out.println("No QR Code found in the image");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             } else {
                 System.out.println("Decoded text = " + decodedText);
+                return new ResponseEntity<>(decodedText, HttpStatus.OK);
             }
         } catch (IOException e) {
             System.out.println("Could not decode QR Code, IOException :: " + e.getMessage());
         }
-        return "super";
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
 }
