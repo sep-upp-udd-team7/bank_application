@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, map } from 'rxjs/operators';
 import jwt_decode from "jwt-decode";
 import { environment } from 'src/environments/environment';
+import { Client } from '../model/client.model';
 
 @Injectable({
   providedIn: 'root'
@@ -57,4 +58,7 @@ export class AuthService {
       }));
   }
 
+  getLoggedUser() {
+    return this._http.get<Client>(`${this.auth_url}`);
+  }
 }

@@ -1,1 +1,25 @@
-<p>personal-info works!</p>
+<div>
+    <h1>Home page</h1><br>
+
+    <div [hidden]="!isCompany">   
+        <h4>Merchant ID</h4>
+        <input name="merchantId" [(ngModel)]="client.merchantId" disabled><br><br>
+        <h4>Merchant password</h4>
+        <input name="merchantPassword" [(ngModel)]="client.merchantPassword" disabled><br>
+    </div>
+    <div [hidden]="isCompany">   
+        <h3 style="display: flex; margin: auto; justify-content: center;">Credit card</h3>
+        <h4>Card holder name</h4>
+        <input name="cardHolderName" [(ngModel)]="client.bankAccount.creditCard.cardHolderName" disabled><br><br>
+        <h4>PAN</h4>
+        <input name="pan" [(ngModel)]="client.bankAccount.creditCard.pan" disabled><br><br>
+        <div style="display: inline; margin: auto;">
+            <h4>mm</h4>
+            <input name="mm" [(ngModel)]="client.bankAccount.creditCard.mm" disabled><br><br>
+            <h4>yy</h4>
+            <input name="yy" [(ngModel)]="client.bankAccount.creditCard.yy" disabled><br><br>
+        </div>
+        <h4>CVV/CVC</h4>
+        <input name="cvv" [(ngModel)]="client.bankAccount.creditCard.cvv" disabled><br><br>
+    </div>
+</div>
