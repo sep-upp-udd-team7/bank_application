@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
+
 @RestController
 @RequestMapping(value = "/clients", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ClientController {
@@ -54,4 +56,12 @@ public class ClientController {
         return true;
     }
 
+    @RequestMapping(method = RequestMethod.GET)
+    public ResponseEntity<?> getLoggedUser(Principal user) {
+        try {
+            return new ResponseEntity<>(clientService.getClient(user.getName()), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

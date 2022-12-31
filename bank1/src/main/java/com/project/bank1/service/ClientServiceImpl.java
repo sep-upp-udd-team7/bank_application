@@ -72,7 +72,7 @@ public class ClientServiceImpl implements ClientService {
             client.setMerchantId(merchantId);
             client.setMerchantPassword(merchantPassword);
         }
-        client.setBankAccounts(bankAccountService.addBankAccount(client));
+        client.setBankAccount(bankAccountService.addBankAccount(client));
         VerificationToken verificationToken = new VerificationToken(client);
         verificationTokenService.saveVerificationToken(verificationToken);
         clientRepository.save(client);
@@ -141,6 +141,15 @@ public class ClientServiceImpl implements ClientService {
             return  false;
         }
         return true;
+    }
+
+    @Override
+    public ClientDto getClient(String email) throws Exception {
+        Client client = clientRepository.findByEmail(email);
+        if (client == null) {
+            throw new Exception("Client with " + email + " not found!");
+        }
+        return new ClientMapper().mapClientToClientDto(client);
     }
 
 
