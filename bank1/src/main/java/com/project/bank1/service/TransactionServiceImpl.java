@@ -54,6 +54,15 @@ public class TransactionServiceImpl implements TransactionService {
         return null;
     }
 
+    @Override
+    public void updateStatus(String id, TransactionStatus failed) {
+        Transaction t = transactionRepository.findById(id).get();
+        if (t != null) {
+            t.setStatus(failed);
+            transactionRepository.save(t);
+        }
+    }
+
     private Long generateTransactionId(int lengthOfPaymentId) {
         double rndNum = Math.random();
         System.out.println(rndNum);

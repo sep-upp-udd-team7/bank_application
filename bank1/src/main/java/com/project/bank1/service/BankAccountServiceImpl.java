@@ -45,8 +45,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         return bankAccount;
     }
 
-    private String generateBankAccountNumber(int length) {
-        // SD: nasla sam na netu da ziro racun ima 18 cifara
+    private String generateBankAccountNumber(int length) { // ziro racun ima 18 cifara
         double rndNum = Math.random();
         long number = (long) (rndNum * Math.pow(10, length));
         System.out.println("Generated bank account number: " + number);
@@ -56,10 +55,11 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     public AcquirerResponseDto validateAcquirer(RequestDto dto) throws Exception {
         if (!clientService.validateMerchantData(dto.getMerchantId(), dto.getMerchantPassword())) {
-            return null;
+            throw new Exception("Error when creating acquirer's transaction");
         }
         Transaction transaction = transactionService.createTransaction(dto);
         if (transaction == null) {
+            transactionService.updateStatus(transaction.getId(), TransactionStatus.FAILED);
             throw new Exception("Error when creating acquirer's transaction");
         }
         String paymentUrl = environment.getProperty("bank.frontend.url") + environment
@@ -68,6 +68,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         AcquirerResponseDto response = new AcquirerResponseDto();
         response.setPaymentId(String.valueOf(transaction.getId()));
         response.setPaymentUrl(paymentUrl);
+        transactionService.save(transaction);
         return response;
     }
 
@@ -84,7 +85,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     public Object validateIssuer(IssuerRequestDto dto) throws Exception {
         if (!isIssuerInSameBankAsAcquirer(dto.getPan())) {
-            // TODO: proslediti zahtev na PCC
+            // TODO: proslediti zahtev na PCC, za sad exception
             throw new Exception("Issuer and acquirer are not in the same bank! - PCC is implementing...");
         }
 
@@ -119,7 +120,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         transaction.setStatus(TransactionStatus.SUCCESS);
         transactionService.save(transaction);
 
-        // TODO: da li onda treba smanjiti rezervisana sredstva kupca?
         issuerBankAccount.setReservedFunds(issuerBankAccount.getReservedFunds() - transaction.getAmount());
         bankAccountRepository.save(issuerBankAccount);
 

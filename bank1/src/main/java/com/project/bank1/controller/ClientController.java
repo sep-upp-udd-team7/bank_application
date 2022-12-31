@@ -2,10 +2,7 @@ package com.project.bank1.controller;
 
 import com.project.bank1.dto.ClientRegistrationDto;
 import com.project.bank1.dto.LoginDto;
-import com.project.bank1.dto.RequestDto;
 import com.project.bank1.dto.TestDto;
-import com.project.bank1.mapper.ClientMapper;
-import com.project.bank1.model.Client;
 import com.project.bank1.service.interfaces.ClientService;
 import com.project.bank1.service.interfaces.CreditCardService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
 @RestController
 @RequestMapping(value = "/clients", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -54,7 +47,7 @@ public class ClientController {
         }
     }
 
-
+    // TODO: obrisati - test endpoint za Bonitu
     @RequestMapping(method = RequestMethod.POST, value = "/pay")
     public Boolean testPay(@RequestBody TestDto dto) {
         System.out.println("AAAAAA" + dto.getAmount());

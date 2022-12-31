@@ -137,6 +137,7 @@ public class ClientServiceImpl implements ClientService {
             return false;
         }
         if (!client.getMerchantPassword().equals(merchantPassword)) {
+            System.out.println("Wrong password!");
             return  false;
         }
         return true;
