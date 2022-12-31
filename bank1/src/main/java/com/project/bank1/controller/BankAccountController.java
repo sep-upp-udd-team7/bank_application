@@ -2,6 +2,7 @@ package com.project.bank1.controller;
 
 import com.project.bank1.dto.IssuerRequestDto;
 import com.project.bank1.dto.RequestDto;
+import com.project.bank1.exceptions.FailedException;
 import com.project.bank1.service.interfaces.BankAccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,9 @@ public class BankAccountController {
     public ResponseEntity<?> validateIssuer(@RequestBody IssuerRequestDto dto) {
         try {
             return new ResponseEntity<>(bankAccountService.validateIssuer(dto), HttpStatus.OK);
+        } catch (FailedException failedException) {
+            // EXPECTATION_FAILED - 417 (4.x.x)8
+            return new ResponseEntity<>(failedException.getMessage(), HttpStatus.EXPECTATION_FAILED);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -4,6 +4,7 @@ import com.project.bank1.dto.AcquirerResponseDto;
 import com.project.bank1.dto.IssuerRequestDto;
 import com.project.bank1.dto.RequestDto;
 import com.project.bank1.enums.TransactionStatus;
+import com.project.bank1.exceptions.FailedException;
 import com.project.bank1.model.BankAccount;
 import com.project.bank1.model.Client;
 import com.project.bank1.model.CreditCard;
@@ -35,7 +36,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     public BankAccount addBankAccount(Client client) {
         BankAccount bankAccount = new BankAccount();
-        bankAccount.setAvailableFunds((double) 0);
+        bankAccount.setAvailableFunds((double) 1000);
         bankAccount.setReservedFunds((double) 0);
         bankAccount.setTransactions(new ArrayList<Transaction>());
         bankAccount.setCreditCard(creditCardService.addCreditCard(client.getName()));
@@ -55,7 +56,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     public AcquirerResponseDto validateAcquirer(RequestDto dto) throws Exception {
         if (!clientService.validateMerchantData(dto.getMerchantId(), dto.getMerchantPassword())) {
-            throw new Exception("Error when creating acquirer's transaction");
+            throw new Exception("Error while validating merchant credentials");
         }
         Transaction transaction = transactionService.createTransaction(dto);
         if (transaction == null) {
@@ -107,7 +108,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         if (issuerBankAccount.getAvailableFunds() < transaction.getAmount()) {
             transaction.setStatus(TransactionStatus.FAILED);
             transactionService.save(transaction);
-            throw new Exception("The customer's bank account does not have enough money");
+            throw new FailedException("The customer's bank account does not have enough money");
         }
         reserveFunds(issuerBankAccount, transaction.getAmount());
         transaction.setStatus(TransactionStatus.SUCCESS);
