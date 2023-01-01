@@ -1,8 +1,11 @@
-// input {
-//     margin: auto;
-//     width: 900px;
-//     display: flex;
-// }
+input:disabled {
+    font-size: larger;
+    color: 	#606060;
+}
+
+label {
+    font-size: large;
+}
 
 h4 {
     margin: auto;
@@ -10,7 +13,16 @@ h4 {
     display: flex; 
 }
 
+.example-form-field1 {
+    width: 1050px;
+    justify-content: center;
+    display: block;
+}
+
 .example-form-field {
     width: 950px;
+    margin: auto;
+    display: flex;
+    justify-content: center;
 }
   
