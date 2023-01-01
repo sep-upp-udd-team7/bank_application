@@ -16,7 +16,11 @@ export class CreditCardService {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
    });
-    return this.http.post(`${this.bankAccountController}/validateIssuer`, body, { headers: headers })
+   let HTTPOptions: Object = {
+    headers: headers,
+    responseType: 'text'
+ }
+    return this.http.post<string>(`${this.bankAccountController}/validateIssuer`, body, HTTPOptions)
   }
 
 
