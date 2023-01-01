@@ -4,7 +4,8 @@ import com.project.bank1.dto.AcquirerResponseDto;
 import com.project.bank1.dto.IssuerRequestDto;
 import com.project.bank1.dto.RequestDto;
 import com.project.bank1.enums.TransactionStatus;
-import com.project.bank1.exceptions.FailedException;
+import com.project.bank1.exceptions.ErrorTransactionException;
+import com.project.bank1.exceptions.FailedTransactionException;
 import com.project.bank1.model.BankAccount;
 import com.project.bank1.model.Client;
 import com.project.bank1.model.CreditCard;
@@ -60,7 +61,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         }
         Transaction transaction = transactionService.createTransaction(dto);
         if (transaction == null) {
-            transactionService.updateStatus(transaction.getId(), TransactionStatus.FAILED);
             throw new Exception("Error when creating acquirer's transaction");
         }
         String paymentUrl = environment.getProperty("bank.frontend.url") + environment
@@ -84,31 +84,34 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    public Object validateIssuer(IssuerRequestDto dto) throws Exception {
+    public String validateIssuer(IssuerRequestDto dto) throws Exception, FailedTransactionException {
         if (!isIssuerInSameBankAsAcquirer(dto.getPan())) {
             // TODO: proslediti zahtev na PCC, za sad exception
             throw new Exception("Issuer and acquirer are not in the same bank! - PCC is implementing...");
         }
 
+        Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
+        if (transaction == null) {
+            // TODO: redirekcija na PSP error stranicu ???
+            throw new Exception("Transaction with id " + dto.getPaymentId() + " not found");
+        }
+
         CreditCard issuerCreditCard = creditCardService.validateIssuerCreditCard(dto);
         if (issuerCreditCard == null) {
-            throw new Exception("The issuer's credit card credentials are NOT correct or or the credit card has expired");
+            String msg = "The issuer's credit card credentials are NOT correct or or the credit card has expired";
+            throw new Exception(transaction.getErrorURL());
         }
         BankAccount issuerBankAccount = findIssuerBankAccountByCreditCardId(issuerCreditCard.getId());
         if (issuerBankAccount == null) {
-            throw new Exception("Issuer bank account not found");
-        }
-
-        Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
-        if (transaction == null) {
-            throw new Exception("Transaction with id " + dto.getPaymentId() + " not found");
+            String msg = "Issuer bank account not found";
+            throw new Exception(transaction.getErrorURL());
         }
         transaction.setIssuerBankAccountId(issuerBankAccount.getId());
 
         if (issuerBankAccount.getAvailableFunds() < transaction.getAmount()) {
             transaction.setStatus(TransactionStatus.FAILED);
             transactionService.save(transaction);
-            throw new FailedException("The customer's bank account does not have enough money");
+            throw new FailedTransactionException("The customer's bank account does not have enough money", transaction.getFailedURL());
         }
         reserveFunds(issuerBankAccount, transaction.getAmount());
         transaction.setStatus(TransactionStatus.SUCCESS);
@@ -123,8 +126,7 @@ public class BankAccountServiceImpl implements BankAccountService {
 
         issuerBankAccount.setReservedFunds(issuerBankAccount.getReservedFunds() - transaction.getAmount());
         bankAccountRepository.save(issuerBankAccount);
-
-        return null;
+        return transaction.getSuccessURL();
     }
 
     private void rollbackReservedFunds(BankAccount issuerBankAccount, Double amount) {

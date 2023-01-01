@@ -14,7 +14,6 @@ export class AuthService {
 
   private auth_url = environment.backendUrl + 'clients';
 
-
   login(user) {
     const loginHeaders = new HttpHeaders({
       'Accept': 'application/json',
@@ -59,6 +58,10 @@ export class AuthService {
   }
 
   getLoggedUser() {
+  //   const headers = new HttpHeaders({
+  //     // 'Accept': 'application/json',
+  //     'Content-Type': 'application/json'
+  //  });
     return this._http.get<Client>(`${this.auth_url}`);
   }
 }

@@ -1,11 +1,21 @@
 <div>
-    <h1>Home page</h1><br>
-
+    <h1>Welcome {{client.name}}</h1><br>
     <div [hidden]="!isCompany">   
-        <h4>Merchant ID</h4>
-        <input name="merchantId" [(ngModel)]="client.merchantId" disabled><br><br>
-        <h4>Merchant password</h4>
-        <input name="merchantPassword" [(ngModel)]="client.merchantPassword" disabled><br>
+        <button *ngIf="client.merchantId" mat-raised-button color="primary" (click)="generateAPIKey()" style="display: flex; justify-content: center; margin: auto; margin-bottom: 50px; padding: 10px;">Generate API key</button>
+        <mat-form-field class="example-form-field" appearance="fill" style="justify-content: center; margin: auto">
+            <mat-label>Merchant ID</mat-label>
+            <input matInput type="text" [(ngModel)]="client.merchantId" disabled>
+            <button *ngIf="client.merchantId"  mat-button matSuffix aria-label="Copy" [cdkCopyToClipboard]="client.merchantId">
+                <mat-icon>content_copy</mat-icon>
+            </button>
+        </mat-form-field>
+        <mat-form-field class="example-form-field" appearance="fill">
+            <mat-label>Merchant password</mat-label>
+            <input matInput type="text" [(ngModel)]="client.merchantPassword" disabled>
+            <button *ngIf="client.merchantPassword" mat-button matSuffix aria-label="Copy" [cdkCopyToClipboard]="client.merchantPassword">
+                <mat-icon>content_copy</mat-icon>
+            </button>
+        </mat-form-field>
     </div>
     <div [hidden]="isCompany">   
         <h3 style="display: flex; margin: auto; justify-content: center;">Credit card</h3>

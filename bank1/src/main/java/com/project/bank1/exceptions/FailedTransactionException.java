@@ -1,8 +1,13 @@
 package com.project.bank1.exceptions;
 
-public class FailedException extends Exception {
-    
-    public FailedException(String message) {
+import lombok.Getter;
+
+@Getter
+public class FailedTransactionException extends Exception {
+    private  String href;
+
+    public FailedTransactionException(String message, String href) {
         super(message);
+        this.href = href;
     }
 }

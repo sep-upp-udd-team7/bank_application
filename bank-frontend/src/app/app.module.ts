@@ -10,6 +10,12 @@ import { CardInfoComponent } from './components/card-info/card-info.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { PersonalInfoComponent } from './components/personal-info/personal-info.component';
+import { MatButtonModule } from '@angular/material/button';
+import { ClipboardModule } from '@angular/cdk/clipboard';
+import { MatFormFieldModule } from '@angular/material/form-field'
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
@@ -24,8 +30,13 @@ import { PersonalInfoComponent } from './components/personal-info/personal-info.
     AppRoutingModule,
     FormsModule,
     ReactiveFormsModule,
-    HttpClientModule
-    
+    HttpClientModule,
+    MatButtonModule,
+    ClipboardModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    BrowserAnimationsModule,
   ],
   providers: [
     {

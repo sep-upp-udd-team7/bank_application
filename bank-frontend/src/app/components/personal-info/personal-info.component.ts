@@ -26,4 +26,8 @@ export class PersonalInfoComponent implements OnInit {
 
   }
 
+  generateAPIKey() {
+    alert('TODO')
+  }
+
 }
