@@ -14,9 +14,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(value = "/accounts", produces = MediaType.APPLICATION_JSON_VALUE)
 public class BankAccountController {
-
     @Autowired
-    BankAccountService bankAccountService;
+    private BankAccountService bankAccountService;
 
     @RequestMapping(method = RequestMethod.POST, value = "/validateAcquirer", produces=MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> validateAcquirer(@RequestBody RequestDto dto) {
@@ -30,13 +29,12 @@ public class BankAccountController {
 
     @RequestMapping(method = RequestMethod.POST, value = "/validateIssuer", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> validateIssuer(@RequestBody IssuerRequestDto dto) {
-        try {
-            return new ResponseEntity<>(bankAccountService.validateIssuer(dto), HttpStatus.OK);
-        } catch (FailedTransactionException failedException) {
-            return new ResponseEntity<>(failedException.getHref(), HttpStatus.EXPECTATION_FAILED); // EXPECTATION_FAILED - 417 (4.x.x)
-        } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return new ResponseEntity<>(bankAccountService.validateIssuer(dto), HttpStatus.OK);
+//        try {
+//            return new ResponseEntity<>(bankAccountService.validateIssuer(dto), HttpStatus.OK);
+//        } catch (Exception e) {
+//            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
     }
 
 }

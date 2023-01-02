@@ -3,9 +3,8 @@ package com.project.bank1.service;
 import com.project.bank1.dto.AcquirerResponseDto;
 import com.project.bank1.dto.IssuerRequestDto;
 import com.project.bank1.dto.RequestDto;
+import com.project.bank1.dto.ResponseDto;
 import com.project.bank1.enums.TransactionStatus;
-import com.project.bank1.exceptions.ErrorTransactionException;
-import com.project.bank1.exceptions.FailedTransactionException;
 import com.project.bank1.model.BankAccount;
 import com.project.bank1.model.Client;
 import com.project.bank1.model.CreditCard;
@@ -17,7 +16,11 @@ import com.project.bank1.service.interfaces.CreditCardService;
 import com.project.bank1.service.interfaces.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.ArrayList;
 
@@ -33,6 +36,9 @@ public class BankAccountServiceImpl implements BankAccountService {
     private Environment environment;
     @Autowired
     private TransactionService transactionService;
+
+//    @Autowired(required = false)
+//    private WebClient webClient;
 
     @Override
     public BankAccount addBankAccount(Client client) {
@@ -84,58 +90,93 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     @Override
-    public String validateIssuer(IssuerRequestDto dto) throws Exception, FailedTransactionException {
+    public String validateIssuer(IssuerRequestDto dto) {
         if (!isIssuerInSameBankAsAcquirer(dto.getPan())) {
             // TODO: proslediti zahtev na PCC, za sad exception
-            throw new Exception("Issuer and acquirer are not in the same bank! - PCC is implementing...");
+            String msg = "Issuer and acquirer are not in the same bank! - PCC is implementing...";
+            System.out.println(msg);
+            return null;
         }
 
         Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
         if (transaction == null) {
-            // TODO: redirekcija na PSP error stranicu ???
-            throw new Exception("Transaction with id " + dto.getPaymentId() + " not found");
+            String msg = "Transaction with id " + dto.getPaymentId() + " not found";
+            System.out.println(msg);
+            transaction.setStatus(TransactionStatus.ERROR);
+            transactionService.save(transaction);
+            return finishPayment(transaction).getBody();
+            //throw new Exception();
         }
 
         CreditCard issuerCreditCard = creditCardService.validateIssuerCreditCard(dto);
         if (issuerCreditCard == null) {
             String msg = "The issuer's credit card credentials are NOT correct or or the credit card has expired";
-            throw new Exception(transaction.getErrorURL());
+            System.out.println(msg);
+            transaction.setStatus(TransactionStatus.FAILED);
+            transactionService.save(transaction);
+            return finishPayment(transaction).getBody();
+            //throw new Exception(transaction.getErrorURL());
         }
         BankAccount issuerBankAccount = findIssuerBankAccountByCreditCardId(issuerCreditCard.getId());
         if (issuerBankAccount == null) {
             String msg = "Issuer bank account not found";
-            throw new Exception(transaction.getErrorURL());
+            System.out.println(msg);
+            transaction.setStatus(TransactionStatus.ERROR);
+            transactionService.save(transaction);
+            return finishPayment(transaction).getBody();
+            //throw new Exception(transaction.getErrorURL());
         }
         transaction.setIssuerBankAccountId(issuerBankAccount.getId());
 
         if (issuerBankAccount.getAvailableFunds() < transaction.getAmount()) {
             transaction.setStatus(TransactionStatus.FAILED);
             transactionService.save(transaction);
-            throw new FailedTransactionException("The customer's bank account does not have enough money", transaction.getFailedURL());
+            System.out.println("The customer's bank account does not have enough money");
+            return finishPayment(transaction).getBody();
+//            throw new FailedTransactionException("The customer's bank account does not have enough money", transaction.getFailedURL());
         }
         reserveFunds(issuerBankAccount, transaction.getAmount());
-        transaction.setStatus(TransactionStatus.SUCCESS);
-        transactionService.save(transaction);
 
         // prebacivanje sredstava na racun prodavca
         BankAccount acquirerBankAccount = transaction.getBankAccount();
         Double newAvailableFundsAcquirer = acquirerBankAccount.getAvailableFunds() + transaction.getAmount();
         acquirerBankAccount.setAvailableFunds(newAvailableFundsAcquirer);
-        transaction.setStatus(TransactionStatus.SUCCESS);
-        transactionService.save(transaction);
 
         issuerBankAccount.setReservedFunds(issuerBankAccount.getReservedFunds() - transaction.getAmount());
         bankAccountRepository.save(issuerBankAccount);
-        return transaction.getSuccessURL();
+
+        transaction.setStatus(TransactionStatus.SUCCESS);
+        transactionService.save(transaction);
+
+        ResponseEntity<String> pspApplicationResponse = finishPayment(transaction);
+        return pspApplicationResponse.getBody();
     }
 
-    private void rollbackReservedFunds(BankAccount issuerBankAccount, Double amount) {
-        Double newReservedFunds = issuerBankAccount.getReservedFunds() - amount;
-        issuerBankAccount.setReservedFunds(newReservedFunds);
-        Double newAvailableFunds = issuerBankAccount.getAvailableFunds() + amount;
-        issuerBankAccount.setAvailableFunds(newAvailableFunds);
-        bankAccountRepository.save(issuerBankAccount);
+    private ResponseEntity<String> finishPayment(Transaction transaction) {
+        ResponseDto requestForPspApplication = getRequestDtoForPspApplication(transaction);
+
+        ResponseEntity<String> pspApplicationResponse = WebClient.builder()
+                .build().post()
+                .uri(environment.getProperty("psp.finish-payment"))
+                .body(BodyInserters.fromValue(requestForPspApplication))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .toEntity(String.class)
+                .block();
+        return pspApplicationResponse;
     }
+
+    private ResponseDto getRequestDtoForPspApplication(Transaction transaction) {
+        // get RequestDto when issuer and acquirer are in the SAME bank
+        ResponseDto dto = new ResponseDto();
+        dto.setPaymentId(transaction.getId());
+        dto.setMerchantOrderId(transaction.getMerchantOrderId());
+        dto.setTransactionStatus(transaction.getStatus().toString());
+        dto.setAcquirerOrderId("");
+        dto.setAcquirerTimestamp(null);
+        return dto;
+    }
+
 
     private void reserveFunds(BankAccount issuerBankAccount, Double amount) {
         Double newReservedFunds = issuerBankAccount.getReservedFunds() + amount;
