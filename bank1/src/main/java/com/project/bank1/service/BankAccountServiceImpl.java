@@ -1,9 +1,6 @@
 package com.project.bank1.service;
 
-import com.project.bank1.dto.AcquirerResponseDto;
-import com.project.bank1.dto.IssuerRequestDto;
-import com.project.bank1.dto.RequestDto;
-import com.project.bank1.dto.ResponseDto;
+import com.project.bank1.dto.*;
 import com.project.bank1.enums.TransactionStatus;
 import com.project.bank1.model.BankAccount;
 import com.project.bank1.model.Client;
@@ -22,10 +19,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Random;
 
 @Service
 public class BankAccountServiceImpl implements BankAccountService {
+    private static int acquirerOrderId = 10;
+
     @Autowired
     private BankAccountRepository bankAccountRepository;
     @Autowired
@@ -95,6 +96,11 @@ public class BankAccountServiceImpl implements BankAccountService {
             // TODO: proslediti zahtev na PCC, za sad exception
             String msg = "Issuer and acquirer are not in the same bank! - PCC is implementing...";
             System.out.println(msg);
+
+            PccRequestDto pccRequest =  createPccRequest(dto);
+            String pccResponse = sendRequestToPcc(pccRequest).getBody();
+            System.out.println("Ovo je odgovor od pcc-a: " + pccResponse);
+
             return null;
         }
 
@@ -199,6 +205,51 @@ public class BankAccountServiceImpl implements BankAccountService {
         String issuersBankPan = pan.substring(0, 6);
         String acquirersBankPan = environment.getProperty("bank.pan");
         return issuersBankPan.equals(acquirersBankPan);
+    }
+
+
+    private String generateRandomString(int targetStringLength) {
+        int leftLimit = 97; // letter 'a'
+        int rightLimit = 122; // letter 'z'
+        Random random = new Random();
+
+        String generatedString = random.ints(leftLimit, rightLimit + 1)
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+
+        System.out.println(generatedString);
+        return generatedString;
+    }
+
+
+    private PccRequestDto createPccRequest(IssuerRequestDto dto){
+        PccRequestDto pccRequest = new PccRequestDto();
+        pccRequest.setAcquirerOrderId(generateRandomString(acquirerOrderId));
+        pccRequest.setAcquirerTimestamp(LocalDateTime.now());
+        pccRequest.setCvv(dto.getCvv());
+        pccRequest.setPan(dto.getPan());
+        pccRequest.setPaymentId(dto.getPaymentId());
+        pccRequest.setMm(dto.getMm());
+        pccRequest.setYy(dto.getYy());
+        pccRequest.setCardHolderName(dto.getCardHolderName());
+
+        return pccRequest;
+    }
+
+
+
+    private ResponseEntity<String> sendRequestToPcc(PccRequestDto requestForPccApplication) {
+
+        ResponseEntity<String> pccApplicationResponse = WebClient.builder()
+                .build().post()
+                .uri(environment.getProperty("pcc.pcc-request"))
+                .body(BodyInserters.fromValue(requestForPccApplication))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .toEntity(String.class)
+                .block();
+        return pccApplicationResponse;
     }
 
 }

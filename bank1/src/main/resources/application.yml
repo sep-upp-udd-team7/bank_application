@@ -40,3 +40,6 @@ bank:
 
 psp:
   finish-payment: 'http://localhost:8000/bank-service/credit-cards/finishPayment'
+
+pcc:
+  pcc-request: 'http://localhost:8092/pcc/request/validateAndRedirect'

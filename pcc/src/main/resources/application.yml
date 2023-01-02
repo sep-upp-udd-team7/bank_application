@@ -32,3 +32,5 @@ server:
 #  client:
 #    service-url:
 #      default-zone: http://eureka:password@localhost:8761/eureka
+
+
