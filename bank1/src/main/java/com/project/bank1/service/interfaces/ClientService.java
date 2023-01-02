@@ -8,4 +8,6 @@ public interface ClientService {
     UserTokenStateDto login(LoginDto dto) throws Exception;
 
     boolean validateMerchantData(String merchantId, String merchantPassword);
+
+    ClientDto getClient(String email) throws Exception;
 }

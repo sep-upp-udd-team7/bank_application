@@ -230,10 +230,12 @@ public class TokenUtils {
      * @param userDetails Informacije o korisniku koji je vlasnik JWT tokena.
      * @return Informacija da li je token validan ili ne.
      */
-    public Boolean validateToken(String token, UserDetails userDetails) {
+    public Boolean  validateToken(String token, UserDetails userDetails) {
         Client user = (Client) userDetails;
         final String username = getUsernameFromToken(token);
         final Date created = getIssuedAtDateFromToken(token);
+        final String username2 =userDetails.getUsername();
+        final Boolean rez = !isCreatedBeforeLastPasswordReset(created, user.getLastPasswordResetDate());
 
         // Token je validan kada:
         return (username != null // korisnicko ime nije null

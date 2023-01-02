@@ -1,1 +1,46 @@
-<p>personal-info works!</p>
+<div>
+    <h1>Welcome {{client?.name}}</h1><br>
+    <div [hidden]="!isCompany">   
+        <button *ngIf="client?.merchantId" mat-raised-button color="primary" (click)="generateAPIKey()" style="display: flex; justify-content: center; margin: auto; margin-bottom: 50px; padding: 10px;">Generate API key</button>
+        <mat-form-field class="example-form-field1" appearance="fill" style="justify-content: center; margin: auto">
+            <mat-label>Merchant ID</mat-label>
+            <input matInput type="text" [(ngModel)]="client.merchantId" disabled>
+            <button *ngIf="client?.merchantId"  mat-button matSuffix aria-label="Copy" [cdkCopyToClipboard]="client.merchantId">
+                <mat-icon>content_copy</mat-icon>
+            </button>
+        </mat-form-field>
+        <mat-form-field class="example-form-field1" appearance="fill"  style="justify-content: center; margin: auto">
+            <mat-label>Merchant password</mat-label>
+            <input matInput type="text" [(ngModel)]="client.merchantPassword" disabled>
+            <button *ngIf="client?.merchantPassword" mat-button matSuffix aria-label="Copy" [cdkCopyToClipboard]="client.merchantPassword">
+                <mat-icon>content_copy</mat-icon>
+            </button>
+        </mat-form-field>
+    </div>
+    <div [hidden]="isCompany">   
+        <h3 style="display: flex; margin: auto; justify-content: center; margin-bottom: 20px;">Credit card informations</h3>
+        <mat-form-field class="example-form-field" appearance="fill">
+            <mat-label>Card holder name</mat-label>
+            <input matInput name="cardHolderName" [(ngModel)]="client.bankAccount.creditCard.cardHolderName" disabled><br><br>
+        </mat-form-field>
+        <mat-form-field class="example-form-field" appearance="fill">
+            <mat-label>PAN</mat-label>
+            <input matInput name="pan" [(ngModel)]="client.bankAccount.creditCard.pan" disabled><br><br>
+        </mat-form-field>
+        <div style="display: inline; margin: auto;">
+            <h4></h4>
+            <mat-form-field class="example-form-field" appearance="fill">
+                <mat-label>MM</mat-label>
+                <input matInput name="mm" [(ngModel)]="client.bankAccount.creditCard.mm" disabled><br><br>
+            </mat-form-field>
+            <mat-form-field class="example-form-field" appearance="fill">
+                <mat-label>YY</mat-label>
+                <input matInput name="yy" [(ngModel)]="client.bankAccount.creditCard.yy" disabled><br><br>
+            </mat-form-field>
+        </div>
+        <mat-form-field class="example-form-field" appearance="fill">
+            <mat-label>CVV/CVC</mat-label>
+            <input matInput name="cvv" [(ngModel)]="client.bankAccount.creditCard.cvv" disabled><br><br>
+        </mat-form-field>
+    </div>
+</div>

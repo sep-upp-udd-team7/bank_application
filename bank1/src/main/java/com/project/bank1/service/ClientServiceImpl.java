@@ -60,7 +60,7 @@ public class ClientServiceImpl implements ClientService {
             throw new Exception("Passwords do not match");
         }
         client.setPassword(passwordEncoder.encode(dto.getPassword()));
-        client.setLastPasswordResetDate(Timestamp.from(Instant.now()));
+        client.setLastPasswordResetDate(Timestamp.from(Instant.now().minusSeconds(1)));
         ClientType clientType = clientTypeService.findClientTypeByName(findClientTypeName(dto.getIsCompany()));
         if (clientType == null) {
             throw new Exception("Client type is not found");
@@ -72,10 +72,11 @@ public class ClientServiceImpl implements ClientService {
             client.setMerchantId(merchantId);
             client.setMerchantPassword(merchantPassword);
         }
-        client.setBankAccounts(bankAccountService.addBankAccount(client));
+        clientRepository.save(client);
+        Client c = clientRepository.findByEmail(client.getEmail());
+        client.setBankAccount(bankAccountService.addBankAccount(c));
         VerificationToken verificationToken = new VerificationToken(client);
         verificationTokenService.saveVerificationToken(verificationToken);
-        clientRepository.save(client);
 
         String jwt = tokenUtils.generateToken(client.getUsername(), client.getClientType().getName());
         int expiresIn = tokenUtils.getExpiredIn();
@@ -137,9 +138,19 @@ public class ClientServiceImpl implements ClientService {
             return false;
         }
         if (!client.getMerchantPassword().equals(merchantPassword)) {
+            System.out.println("Wrong password!");
             return  false;
         }
         return true;
+    }
+
+    @Override
+    public ClientDto getClient(String email) throws Exception {
+        Client client = clientRepository.findByEmail(email);
+        if (client == null) {
+            throw new Exception("Client with " + email + " not found!");
+        }
+        return new ClientMapper().mapClientToClientDto(client);
     }
 
 

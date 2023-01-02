@@ -48,4 +48,7 @@ public class Transaction {
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "bank_account")
     private BankAccount bankAccount;
+
+    @Column(name = "issuer_bank_account_id")
+    private Long issuerBankAccountId;
 }

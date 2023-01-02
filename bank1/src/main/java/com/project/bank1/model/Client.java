@@ -42,7 +42,7 @@ public class Client implements UserDetails {
     private String password;
 
     @OneToOne(mappedBy="client")
-    private BankAccount bankAccounts;
+    private BankAccount bankAccount;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "client_type_id")
@@ -50,7 +50,6 @@ public class Client implements UserDetails {
 
     @Column(name = "last_password_reset_date")
     private Timestamp lastPasswordResetDate;
-
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

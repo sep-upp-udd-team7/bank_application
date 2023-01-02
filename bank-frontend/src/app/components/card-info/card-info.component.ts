@@ -23,7 +23,7 @@ export class CardInfoComponent implements OnInit {
 
   ngOnInit(): void {
     this.paymentId = JSON.parse(this.route.snapshot.paramMap.get('paymentId') as string);
-    alert(this.paymentId)
+    // alert(this.paymentId)
     
     this.setYearOptions(10);
     this.setMonthOptions(12);
@@ -57,11 +57,14 @@ export class CardInfoComponent implements OnInit {
     }
 
     this.creditCardService.validateIssuer(JSON.stringify(body)).subscribe(
-      d =>{ 
-      console.log(d)
-      }, 
-      err => {
-        console.log(err.error)
+      data => { 
+        console.log(data)
+        window.location.href = data
+      }, err => {
+        console.log(err)
+        if (err.error.includes("http")) {
+          window.location.href = err.error
+        }
       }
     );
 

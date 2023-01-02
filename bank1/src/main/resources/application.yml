@@ -37,3 +37,6 @@ bank:
   frontend:
     url: 'http://localhost:3000/'
     credit-card-data-module: 'credit-card'
+
+psp:
+  finish-payment: 'http://localhost:8000/bank-service/credit-cards/finishPayment'
