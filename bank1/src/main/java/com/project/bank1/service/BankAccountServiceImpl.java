@@ -38,6 +38,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Autowired
     private TransactionService transactionService;
 
+
 //    @Autowired(required = false)
 //    private WebClient webClient;
 
@@ -101,6 +102,7 @@ public class BankAccountServiceImpl implements BankAccountService {
             String pccResponse = sendRequestToPcc(pccRequest).getBody();
             System.out.println("Ovo je odgovor od pcc-a: " + pccResponse);
 
+            //TODO: ovde ce da se obradjuje odgovor od pcca
             return null;
         }
 
@@ -224,15 +226,22 @@ public class BankAccountServiceImpl implements BankAccountService {
 
 
     private PccRequestDto createPccRequest(IssuerRequestDto dto){
+        Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
+
         PccRequestDto pccRequest = new PccRequestDto();
         pccRequest.setAcquirerOrderId(generateRandomString(acquirerOrderId));
         pccRequest.setAcquirerTimestamp(LocalDateTime.now());
         pccRequest.setCvv(dto.getCvv());
         pccRequest.setPan(dto.getPan());
-        pccRequest.setPaymentId(dto.getPaymentId());
         pccRequest.setMm(dto.getMm());
         pccRequest.setYy(dto.getYy());
         pccRequest.setCardHolderName(dto.getCardHolderName());
+        pccRequest.setAmount(transaction.getAmount());
+        pccRequest.setMerchantOrderId(transaction.getMerchantOrderId());
+        pccRequest.setMerchantTimestamp(transaction.getMerchantTimestamp());
+        pccRequest.setSuccessURL(transaction.getSuccessURL());
+        pccRequest.setFailedURL(transaction.getFailedURL());
+        pccRequest.setErrorURL(transaction.getErrorURL());
 
         return pccRequest;
     }
@@ -250,6 +259,96 @@ public class BankAccountServiceImpl implements BankAccountService {
                 .toEntity(String.class)
                 .block();
         return pccApplicationResponse;
+    }
+
+    @Override
+    public PccResponseDto issuerPaymentDifferentBanks(PccRequestDto dto) {
+        String msgs = "Payment when acquirer != issuer started!";
+        System.out.println(msgs);
+
+        Transaction transaction = transactionService.createTransactionForIssuer(dto);
+        //generisanje ISSUER_ORDER_ID i ISSUER_TIMESTAMP
+        String issuerOrderId = generateRandomString(acquirerOrderId);
+        LocalDateTime issuerTimestamp = LocalDateTime.now();
+
+        transaction.setIssuerOrderId(issuerOrderId);
+        transaction.setIssuerTimestamp(issuerTimestamp);
+        transactionService.save(transaction);
+
+        IssuerRequestDto issuerRequestDto = createIssuerRequestDto(dto);
+        CreditCard issuerCreditCard = creditCardService.validateIssuerCreditCard(issuerRequestDto);
+        if (issuerCreditCard == null) {
+            String msg = "The issuer's credit card credentials are NOT correct or the credit card has expired";
+            System.out.println(msg);
+            transaction.setStatus(TransactionStatus.FAILED);
+            transactionService.save(transaction);
+            return createResponseToPcc(transaction); //TODO: promijeni ovo
+        }
+
+        BankAccount issuerBankAccount = findIssuerBankAccountByCreditCardId(issuerCreditCard.getId());
+        if (issuerBankAccount == null) {
+            String msg = "Issuer bank account not found";
+            System.out.println(msg);
+            transaction.setStatus(TransactionStatus.ERROR);
+            transactionService.save(transaction);
+            return createResponseToPcc(transaction); //TODO:promijeni ovo
+        }
+        transaction.setIssuerBankAccountId(issuerBankAccount.getId());
+
+        if (issuerBankAccount.getAvailableFunds() < transaction.getAmount()) {
+            transaction.setStatus(TransactionStatus.FAILED);
+            transactionService.save(transaction);
+            System.out.println("The customer's bank account does not have enough money");
+            return createResponseToPcc(transaction); //TODO:promijeni ovo
+//            throw new FailedTransactionException("The customer's bank account does not have enough money", transaction.getFailedURL());
+        }
+        reserveFunds(issuerBankAccount, transaction.getAmount());
+        //smanji rezervisana sredstva
+        issuerBankAccount.setReservedFunds(issuerBankAccount.getReservedFunds() - transaction.getAmount());
+        bankAccountRepository.save(issuerBankAccount);
+
+        transaction.setStatus(TransactionStatus.SUCCESS);
+        transactionService.save(transaction);
+
+        //ResponseEntity<String> paymentResponseToPcc = finishIssuerPayment(transaction);
+        //return paymentResponseToPcc.getBody();
+
+
+        return createResponseToPcc(transaction);
+    }
+
+    @Override
+    public BankAccount findBankAccountByCreditCardId(Long creditCardId) {
+        for(BankAccount ba: bankAccountRepository.findAll()){
+            if(ba.getCreditCard().getId().equals(creditCardId)){
+                return ba;
+            }
+        }
+        return null;
+    }
+
+    private IssuerRequestDto createIssuerRequestDto(PccRequestDto dto){
+        IssuerRequestDto ir = new IssuerRequestDto();
+        ir.setCardHolderName(dto.getCardHolderName());
+        ir.setPan(dto.getPan());
+        ir.setMm(dto.getMm());
+        ir.setYy(dto.getYy());
+        ir.setCvv(dto.getCvv());
+
+        return ir;
+    }
+
+
+    private PccResponseDto createResponseToPcc(Transaction transaction){
+        PccResponseDto pccResponseDto = new PccResponseDto();
+        pccResponseDto.setTransactionStatus(transaction.getStatus().toString());
+        pccResponseDto.setAcquirerOrderId(transaction.getAcquirerOrderId());
+        pccResponseDto.setAcquirerTimestamp(transaction.getAcquirerTimestamp());
+        pccResponseDto.setIssuerOrderId(transaction.getIssuerOrderId());
+        pccResponseDto.setIssuerTimestamp(transaction.getIssuerTimestamp());
+        pccResponseDto.setIssuerBankAccountId(transaction.getIssuerBankAccountId());
+
+        return  pccResponseDto;
     }
 
 }

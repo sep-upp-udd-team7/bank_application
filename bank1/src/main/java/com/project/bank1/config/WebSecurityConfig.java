@@ -64,7 +64,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("**/login").permitAll()
                 .antMatchers("**/validateAcquirer").permitAll()
                 .antMatchers("**/validateIssuer").permitAll()
+                .antMatchers("**/issuerBankPayment").permitAll()
                 .antMatchers("**/h2-console/**").permitAll()
+
+
 
                 .anyRequest().authenticated().and()
 
@@ -84,6 +87,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         web.ignoring().antMatchers(HttpMethod.POST, "/**/pay");
         web.ignoring().antMatchers(HttpMethod.POST, "/**/validateAcquirer");
         web.ignoring().antMatchers(HttpMethod.POST, "/**/validateIssuer");
+        web.ignoring().antMatchers(HttpMethod.POST, "/**/issuerBankPayment");
         web.ignoring().antMatchers(HttpMethod.GET, "/**/auth/**");
         web.ignoring().antMatchers(HttpMethod.GET, "/**/getAll/**");
         web.ignoring().antMatchers(HttpMethod.GET, "**/h2-console/**");

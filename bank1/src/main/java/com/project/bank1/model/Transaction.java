@@ -51,4 +51,20 @@ public class Transaction {
 
     @Column(name = "issuer_bank_account_id")
     private Long issuerBankAccountId;
+
+
+    @Column(name = "acquirer_order_id")
+    private String acquirerOrderId;
+
+    @Column(name = "acquirer_timestamp")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime acquirerTimestamp;
+
+
+    @Column(name = "issuer_order_id")
+    private String issuerOrderId;
+
+    @Column(name = "issuer_timestamp")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime issuerTimestamp;
 }

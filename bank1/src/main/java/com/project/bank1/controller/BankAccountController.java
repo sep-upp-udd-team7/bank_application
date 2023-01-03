@@ -1,6 +1,7 @@
 package com.project.bank1.controller;
 
 import com.project.bank1.dto.IssuerRequestDto;
+import com.project.bank1.dto.PccRequestDto;
 import com.project.bank1.dto.RequestDto;
 import com.project.bank1.exceptions.ErrorTransactionException;
 import com.project.bank1.exceptions.FailedTransactionException;
@@ -37,4 +38,16 @@ public class BankAccountController {
 //        }
     }
 
+
+    @RequestMapping(method = RequestMethod.POST, value = "/issuerBankPayment", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> issuerPaymentDifferentBanks(@RequestBody PccRequestDto dto) {
+       // return new ResponseEntity<>(bankAccountService.issuerPaymentDifferentBanks(dto), HttpStatus.OK);
+        System.out.println("uslo je u banku2 controller iz pcc-a");
+
+        try {
+            return new ResponseEntity<>(bankAccountService.issuerPaymentDifferentBanks(dto), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

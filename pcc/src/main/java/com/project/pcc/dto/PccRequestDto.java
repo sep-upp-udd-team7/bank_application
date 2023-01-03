@@ -13,5 +13,11 @@ public class PccRequestDto {
     private String mm;
     private String yy;
     private String cvv;
-    private String paymentId;
+    private Double amount;
+    private String merchantOrderId;
+    private LocalDateTime merchantTimestamp;
+    private String successURL;
+    private String failedURL;
+    private String errorURL;
+
 }

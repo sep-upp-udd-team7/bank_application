@@ -1,11 +1,14 @@
 package com.project.bank1.service;
 
+import com.project.bank1.dto.PccRequestDto;
 import com.project.bank1.dto.RequestDto;
 import com.project.bank1.enums.TransactionStatus;
 import com.project.bank1.model.BankAccount;
+import com.project.bank1.model.CreditCard;
 import com.project.bank1.model.Transaction;
 import com.project.bank1.repository.TransactionRepository;
 import com.project.bank1.service.interfaces.BankAccountService;
+import com.project.bank1.service.interfaces.CreditCardService;
 import com.project.bank1.service.interfaces.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +19,9 @@ public class TransactionServiceImpl implements TransactionService {
     private TransactionRepository transactionRepository;
     @Autowired
     private BankAccountService bankAccountService;
+
+    @Autowired
+    private CreditCardService creditCardService;
 
     @Override
     public Transaction createTransaction(RequestDto dto) {
@@ -69,5 +75,35 @@ public class TransactionServiceImpl implements TransactionService {
         long number = (long) (rndNum * Math.pow(10, lengthOfPaymentId));
         System.out.println("Generated Payment ID: " + number);
         return (number);
+    }
+
+
+
+
+    public Transaction createTransactionForIssuer(PccRequestDto dto) {
+        CreditCard cc = creditCardService.findByPan(dto.getPan());
+        BankAccount issuerBankAccount = bankAccountService.findBankAccountByCreditCardId(cc.getId());
+
+        if (issuerBankAccount == null) {
+            System.out.println("Issuer bank account not found!");
+            return null;
+        }
+        Transaction transaction = new Transaction();
+        // TODO: ispraviti generisanje transaction id tj. payment id
+        transaction.setId(String.valueOf(generateTransactionId(10)));
+        transaction.setBankAccount(issuerBankAccount);
+        transaction.setAmount(dto.getAmount());
+        transaction.setErrorURL(dto.getErrorURL());
+        transaction.setFailedURL(dto.getFailedURL());
+        transaction.setSuccessURL(dto.getSuccessURL());
+        transaction.setMerchantOrderId(dto.getMerchantOrderId());
+        transaction.setMerchantTimestamp(dto.getMerchantTimestamp());
+        transaction.setStatus(TransactionStatus.CREATED);
+        transaction.setAcquirerOrderId(dto.getAcquirerOrderId());
+        transaction.setAcquirerTimestamp(dto.getAcquirerTimestamp());
+        transaction.setStatus(TransactionStatus.CREATED);
+
+        transactionRepository.save(transaction);
+        return transaction;
     }
 }

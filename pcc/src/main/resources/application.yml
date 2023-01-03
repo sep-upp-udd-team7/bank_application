@@ -33,4 +33,6 @@ server:
 #    service-url:
 #      default-zone: http://eureka:password@localhost:8761/eureka
 
+issuer-bank:
+  pay: 'http://localhost:8099/bank2/accounts/issuerBankPayment'
 

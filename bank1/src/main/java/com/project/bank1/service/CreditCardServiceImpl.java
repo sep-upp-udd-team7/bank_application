@@ -55,6 +55,8 @@ public class CreditCardServiceImpl implements CreditCardService {
         return null;
     }
 
+
+
     private boolean checkExpirationDate(Integer mm, Integer yy) {
         LocalDateTime now = LocalDateTime.now();
         if (yy < now.getYear()) {
@@ -93,6 +95,17 @@ public class CreditCardServiceImpl implements CreditCardService {
         expDate.add(expMonth);
         expDate.add(expYear);
         return expDate;
+    }
+
+
+    @Override
+    public CreditCard findByPan(String pan) {
+        for(CreditCard cc: creditCardRepository.findAll()){
+            if(cc.getPan().equals(pan)){
+                return cc;
+            }
+        }
+        return null;
     }
 
 }

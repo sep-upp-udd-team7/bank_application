@@ -39,4 +39,10 @@ public class Request {
 
     @Column(name = "cvv")
     private String cvv;
+
+    @Column(name = "amount")
+    private Double amount;
+
+
+    //TODO: dodaj i ostala polja iz transakcije???
 }

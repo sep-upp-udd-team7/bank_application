@@ -27,4 +27,14 @@ public class RequestController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+  /*  @RequestMapping(method = RequestMethod.GET, value = "/proba", produces=MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> proba(@RequestBody PccRequestDto dto) {
+
+        try {
+            return new ResponseEntity<>("radi", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }*/
 }
