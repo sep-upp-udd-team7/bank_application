@@ -267,13 +267,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         System.out.println(msgs);
 
         Transaction transaction = transactionService.createTransactionForIssuer(dto);
-        //generisanje ISSUER_ORDER_ID i ISSUER_TIMESTAMP
-        String issuerOrderId = generateRandomString(acquirerOrderId);
-        LocalDateTime issuerTimestamp = LocalDateTime.now();
-
-        transaction.setIssuerOrderId(issuerOrderId);
-        transaction.setIssuerTimestamp(issuerTimestamp);
-        transactionService.save(transaction);
 
         IssuerRequestDto issuerRequestDto = createIssuerRequestDto(dto);
         CreditCard issuerCreditCard = creditCardService.validateIssuerCreditCard(issuerRequestDto);
@@ -282,7 +275,7 @@ public class BankAccountServiceImpl implements BankAccountService {
             System.out.println(msg);
             transaction.setStatus(TransactionStatus.FAILED);
             transactionService.save(transaction);
-            return createResponseToPcc(transaction); //TODO: promijeni ovo
+            return createResponseToPcc(transaction);
         }
 
         BankAccount issuerBankAccount = findIssuerBankAccountByCreditCardId(issuerCreditCard.getId());
@@ -291,7 +284,7 @@ public class BankAccountServiceImpl implements BankAccountService {
             System.out.println(msg);
             transaction.setStatus(TransactionStatus.ERROR);
             transactionService.save(transaction);
-            return createResponseToPcc(transaction); //TODO:promijeni ovo
+            return createResponseToPcc(transaction);
         }
         transaction.setIssuerBankAccountId(issuerBankAccount.getId());
 
@@ -299,7 +292,7 @@ public class BankAccountServiceImpl implements BankAccountService {
             transaction.setStatus(TransactionStatus.FAILED);
             transactionService.save(transaction);
             System.out.println("The customer's bank account does not have enough money");
-            return createResponseToPcc(transaction); //TODO:promijeni ovo
+            return createResponseToPcc(transaction); 
 //            throw new FailedTransactionException("The customer's bank account does not have enough money", transaction.getFailedURL());
         }
         reserveFunds(issuerBankAccount, transaction.getAmount());
@@ -309,9 +302,6 @@ public class BankAccountServiceImpl implements BankAccountService {
 
         transaction.setStatus(TransactionStatus.SUCCESS);
         transactionService.save(transaction);
-
-        //ResponseEntity<String> paymentResponseToPcc = finishIssuerPayment(transaction);
-        //return paymentResponseToPcc.getBody();
 
 
         return createResponseToPcc(transaction);

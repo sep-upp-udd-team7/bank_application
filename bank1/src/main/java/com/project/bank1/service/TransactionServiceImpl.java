@@ -13,8 +13,14 @@ import com.project.bank1.service.interfaces.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.Random;
+
 @Service
 public class TransactionServiceImpl implements TransactionService {
+
+    private static int issuerOrderId = 10;
+
     @Autowired
     private TransactionRepository transactionRepository;
     @Autowired
@@ -103,7 +109,28 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setAcquirerTimestamp(dto.getAcquirerTimestamp());
         transaction.setStatus(TransactionStatus.CREATED);
 
+        //generisanje issuerOrderId-ja i issuerOrderTimestamp-a
+        String ioId = generateRandomString(issuerOrderId);
+        LocalDateTime issuerTimestamp = LocalDateTime.now();
+        transaction.setIssuerOrderId(ioId);
+        transaction.setIssuerTimestamp(issuerTimestamp);
+
         transactionRepository.save(transaction);
         return transaction;
+    }
+
+
+    private String generateRandomString(int targetStringLength) {
+        int leftLimit = 97; // letter 'a'
+        int rightLimit = 122; // letter 'z'
+        Random random = new Random();
+
+        String generatedString = random.ints(leftLimit, rightLimit + 1)
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
+
+        System.out.println(generatedString);
+        return generatedString;
     }
 }
