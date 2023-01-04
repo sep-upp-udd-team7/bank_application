@@ -98,9 +98,8 @@ public class BankAccountServiceImpl implements BankAccountService {
             String msg = "Issuer and acquirer are not in the same bank! - PCC is implementing...";
             System.out.println(msg);
 
-            PccRequestDto pccRequest =  createPccRequest(dto);
-            String pccResponse = sendRequestToPcc(pccRequest).getBody();
-            System.out.println("Ovo je odgovor od pcc-a: " + pccResponse);
+            PccResponseDto pccResponse = createAndSendPccRequest(dto);
+            System.out.println("Ovo je odgovor od pcc-a: " + pccResponse.getTransactionStatus());
 
             //TODO: ovde ce da se obradjuje odgovor od pcca
             return null;
@@ -248,15 +247,15 @@ public class BankAccountServiceImpl implements BankAccountService {
 
 
 
-    private ResponseEntity<String> sendRequestToPcc(PccRequestDto requestForPccApplication) {
+    private ResponseEntity<PccResponseDto> sendRequestToPcc(PccRequestDto requestForPccApplication) {
 
-        ResponseEntity<String> pccApplicationResponse = WebClient.builder()
+        ResponseEntity<PccResponseDto> pccApplicationResponse = WebClient.builder()
                 .build().post()
                 .uri(environment.getProperty("pcc.pcc-request"))
                 .body(BodyInserters.fromValue(requestForPccApplication))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .toEntity(String.class)
+                .toEntity(PccResponseDto.class)
                 .block();
         return pccApplicationResponse;
     }
@@ -292,8 +291,7 @@ public class BankAccountServiceImpl implements BankAccountService {
             transaction.setStatus(TransactionStatus.FAILED);
             transactionService.save(transaction);
             System.out.println("The customer's bank account does not have enough money");
-            return createResponseToPcc(transaction); 
-//            throw new FailedTransactionException("The customer's bank account does not have enough money", transaction.getFailedURL());
+            return createResponseToPcc(transaction);
         }
         reserveFunds(issuerBankAccount, transaction.getAmount());
         //smanji rezervisana sredstva
@@ -339,6 +337,11 @@ public class BankAccountServiceImpl implements BankAccountService {
         pccResponseDto.setIssuerBankAccountId(transaction.getIssuerBankAccountId());
 
         return  pccResponseDto;
+    }
+
+    PccResponseDto createAndSendPccRequest(IssuerRequestDto dto){
+        PccRequestDto pccRequest =  createPccRequest(dto);
+        return sendRequestToPcc(pccRequest).getBody();
     }
 
 }

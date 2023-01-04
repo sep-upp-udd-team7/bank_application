@@ -23,21 +23,25 @@ public class RequestServiceImpl implements RequestService {
     private RequestRepository requestRepository;
 
     @Override
-    public Boolean checkIsValidAndRedirect(PccRequestDto dto) {
+    public PccResponseDto checkIsValidAndRedirect(PccRequestDto dto) {
 
+        String msg = "Starting with PCC...";
+        System.out.println(msg);
+
+        //todo: provjeriti sta jos da se cuva u pccu
         Request r = createNewRequest(dto);
 
         if(!checkIsValidRequest(dto)){
-            return false;
+            msg = "Request in not valid!";
+            System.out.println(msg);
+            //u slucaju neispravnog zahtjeva, vraca se na banku 1
+            return createPccResponse(dto);
         }
 
-        //todo: poslati zahtjev na banku 2
-        PccResponseDto responseFromIssuerBank = sendRequestToIssuerBank(dto).getBody();
-        System.out.println("Ovo je status transakcije sa banke2 : " + responseFromIssuerBank.getTransactionStatus());
-
-
-        //TODO: vrati podatke banci 1
-        return true;
+        //zahtjev se salje na banku 2 i odgovor se vraca banci1
+        msg = "Sending request to Bank 2...";
+        System.out.println(msg);
+        return sendRequestToIssuerBank(dto).getBody();
     }
 
     Boolean checkIsValidRequest(PccRequestDto dto){
@@ -67,7 +71,22 @@ public class RequestServiceImpl implements RequestService {
         else if(dto.getAmount() == null){
             return false;
         }
-        else{ //TODO: dodati else if za ostala polja
+        else if(dto.getMerchantOrderId() == null){
+            return false;
+        }
+        else if(dto.getMerchantTimestamp() == null){
+            return false;
+        }
+        else if(dto.getSuccessURL() == null){
+            return false;
+        }
+        else if(dto.getFailedURL() == null){
+            return false;
+        }
+        else if(dto.getErrorURL() == null){
+            return false;
+        }
+        else{
             return true;
         }
     }
@@ -100,4 +119,16 @@ public class RequestServiceImpl implements RequestService {
 
         return requestRepository.save(r);
     }
+
+    PccResponseDto createPccResponse(PccRequestDto dto){
+        PccResponseDto res = new PccResponseDto();
+        res.setAcquirerOrderId(dto.getAcquirerOrderId());
+        res.setAcquirerTimestamp(dto.getAcquirerTimestamp());
+        res.setTransactionStatus("ERROR");
+
+        return res;
+    }
+
+
+
 }
