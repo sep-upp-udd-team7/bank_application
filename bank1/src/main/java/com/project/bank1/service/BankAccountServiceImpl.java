@@ -101,9 +101,47 @@ public class BankAccountServiceImpl implements BankAccountService {
             PccResponseDto pccResponse = createAndSendPccRequest(dto);
             System.out.println("Ovo je odgovor od pcc-a: " + pccResponse.getTransactionStatus());
 
+            Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
+            if (transaction == null) {
+                msg = "Transaction with id " + dto.getPaymentId() + " not found";
+                System.out.println(msg);
+                transaction.setStatus(TransactionStatus.ERROR);
+                transactionService.save(transaction);
+                return finishPayment(transaction).getBody();
+            }
 
-            //TODO: ovde ce da se obradjuje odgovor od pcca
-            return null;
+            transaction.setAcquirerOrderId(pccResponse.getAcquirerOrderId());
+            transaction.setAcquirerTimestamp(pccResponse.getAcquirerTimestamp());
+            transaction.setIssuerTimestamp(pccResponse.getIssuerTimestamp());
+            transaction.setIssuerOrderId(pccResponse.getIssuerOrderId());
+            transaction.setIssuerBankAccountId(pccResponse.getIssuerBankAccountId());
+
+            if(pccResponse.getTransactionStatus().equals(TransactionStatus.FAILED.toString())){
+                msg = "Something was failed in issuer bank!";
+                System.out.println(msg);
+                transaction.setStatus(TransactionStatus.FAILED);
+                transactionService.save(transaction);
+                return finishPayment(transaction).getBody();
+            }
+            else if(pccResponse.getTransactionStatus().equals(TransactionStatus.ERROR.toString())){
+                msg = "There was an error in issuer bank!";
+                System.out.println(msg);
+                transaction.setStatus(TransactionStatus.ERROR);
+                transactionService.save(transaction);
+                return finishPayment(transaction).getBody();
+            }
+
+
+            //prebacivanje novca na racun prodavca
+            BankAccount acquirerBankAccount = transaction.getBankAccount();
+            Double newAvailableFundsAcquirer = acquirerBankAccount.getAvailableFunds() + transaction.getAmount();
+            acquirerBankAccount.setAvailableFunds(newAvailableFundsAcquirer);
+            bankAccountRepository.save(acquirerBankAccount);
+
+            transaction.setStatus(TransactionStatus.SUCCESS);
+            transactionService.save(transaction);
+
+            return finishPayment(transaction).getBody();
         }
 
         Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
@@ -174,14 +212,21 @@ public class BankAccountServiceImpl implements BankAccountService {
         return pspApplicationResponse;
     }
 
+
+
     private ResponseDto getRequestDtoForPspApplication(Transaction transaction) {
         // get RequestDto when issuer and acquirer are in the SAME bank
         ResponseDto dto = new ResponseDto();
         dto.setPaymentId(transaction.getId());
         dto.setMerchantOrderId(transaction.getMerchantOrderId());
         dto.setTransactionStatus(transaction.getStatus().toString());
-        dto.setAcquirerOrderId("");
-        dto.setAcquirerTimestamp(null);
+        if(transaction.getAcquirerOrderId() == null && transaction.getAcquirerTimestamp() == null){
+            dto.setAcquirerOrderId("");
+            dto.setAcquirerTimestamp(null);
+        }else{
+            dto.setAcquirerOrderId(transaction.getAcquirerOrderId());
+            dto.setAcquirerTimestamp(transaction.getAcquirerTimestamp());
+        }
         return dto;
     }
 
