@@ -28,9 +28,6 @@ public class RequestServiceImpl implements RequestService {
         String msg = "Starting with PCC...";
         System.out.println(msg);
 
-        //todo: provjeriti sta jos da se cuva u pccu
-        Request r = createNewRequest(dto);
-
         if(!checkIsValidRequest(dto)){
             msg = "Request in not valid!";
             System.out.println(msg);
@@ -41,7 +38,14 @@ public class RequestServiceImpl implements RequestService {
         //zahtjev se salje na banku 2 i odgovor se vraca banci1
         msg = "Sending request to Bank 2...";
         System.out.println(msg);
-        return sendRequestToIssuerBank(dto).getBody();
+
+        PccResponseDto response = sendRequestToIssuerBank(dto).getBody();
+        Request r = createNewRequest(dto);
+        r.setIssuerOrderId(response.getIssuerOrderId());
+        r.setIssuerTimestamp(response.getIssuerTimestamp());
+        requestRepository.save(r);
+
+        return response;
     }
 
     Boolean checkIsValidRequest(PccRequestDto dto){
@@ -116,6 +120,11 @@ public class RequestServiceImpl implements RequestService {
         r.setMm(dto.getMm());
         r.setYy(dto.getYy());
         r.setAmount(dto.getAmount());
+        r.setMerchantOrderId(dto.getMerchantOrderId());
+        r.setMerchantTimestamp(dto.getMerchantTimestamp());
+        r.setSuccessURL(dto.getSuccessURL());
+        r.setFailedURL(dto.getFailedURL());
+        r.setErrorURL(dto.getErrorURL());
 
         return requestRepository.save(r);
     }

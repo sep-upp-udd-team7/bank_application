@@ -43,6 +43,25 @@ public class Request {
     @Column(name = "amount")
     private Double amount;
 
+    @Column(name = "merchant_order_id")
+    private String merchantOrderId;
 
-    //TODO: dodaj i ostala polja iz transakcije???
+    @Column(name = "merchant_timestamp")
+    private LocalDateTime merchantTimestamp;
+
+    @Column(name = "issuer_order_id")
+    private String issuerOrderId;
+
+    @Column(name = "issuer_timestamp")
+    private LocalDateTime issuerTimestamp;
+
+    @Column(name = "success_url")
+    private String successURL;
+
+    @Column(name = "failed_url")
+    private String failedURL;
+
+    @Column(name = "error_url")
+    private String errorURL;
+
 }

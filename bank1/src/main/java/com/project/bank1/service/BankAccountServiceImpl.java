@@ -101,6 +101,7 @@ public class BankAccountServiceImpl implements BankAccountService {
             PccResponseDto pccResponse = createAndSendPccRequest(dto);
             System.out.println("Ovo je odgovor od pcc-a: " + pccResponse.getTransactionStatus());
 
+
             //TODO: ovde ce da se obradjuje odgovor od pcca
             return null;
         }
