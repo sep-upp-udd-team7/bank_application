@@ -36,3 +36,11 @@ server:
 issuer-bank:
   pay: 'http://localhost:8099/bank2/accounts/issuerBankPayment'
 
+bank1-application:
+  backend: 'http://localhost:8090/bank1/accounts/issuerBankPayment'
+  pan: '525150'
+
+bank2-application:
+  backend: 'http://localhost:8099/bank2/accounts/issuerBankPayment'
+  pan: '987654'
+

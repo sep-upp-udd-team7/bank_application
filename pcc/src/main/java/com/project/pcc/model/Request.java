@@ -1,5 +1,6 @@
 package com.project.pcc.model;
 
+import com.project.pcc.enums.TransactionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -63,5 +64,9 @@ public class Request {
 
     @Column(name = "error_url")
     private String errorURL;
+
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private TransactionStatus status;
 
 }

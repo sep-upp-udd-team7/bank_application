@@ -99,7 +99,7 @@ public class BankAccountServiceImpl implements BankAccountService {
             System.out.println(msg);
 
             PccResponseDto pccResponse = createAndSendPccRequest(dto);
-            System.out.println("Ovo je odgovor od pcc-a: " + pccResponse.getTransactionStatus());
+            System.out.println("Ovo je payment id1: " + dto.getPaymentId());
 
             Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
             if (transaction == null) {
@@ -136,9 +136,12 @@ public class BankAccountServiceImpl implements BankAccountService {
             BankAccount acquirerBankAccount = transaction.getBankAccount();
             Double newAvailableFundsAcquirer = acquirerBankAccount.getAvailableFunds() + transaction.getAmount();
             acquirerBankAccount.setAvailableFunds(newAvailableFundsAcquirer);
-            bankAccountRepository.save(acquirerBankAccount);
+            //bankAccountRepository.save(acquirerBankAccount);
 
+            //TODO: poslati mozda payment id i azurirati transakciju a ne dodati novu
             transaction.setStatus(TransactionStatus.SUCCESS);
+            System.out.println("Ovo je payment id2: " + transaction.getId());
+
             transactionService.save(transaction);
 
             return finishPayment(transaction).getBody();

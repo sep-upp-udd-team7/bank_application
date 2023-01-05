@@ -2,7 +2,10 @@ package com.project.pcc.service;
 
 import com.project.pcc.dto.PccRequestDto;
 import com.project.pcc.dto.PccResponseDto;
+import com.project.pcc.enums.TransactionStatus;
+import com.project.pcc.model.Bank;
 import com.project.pcc.model.Request;
+import com.project.pcc.repository.BankRepository;
 import com.project.pcc.repository.RequestRepository;
 import com.project.pcc.service.interfaces.RequestService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.LocalDateTime;
+
 @Service
 public class RequestServiceImpl implements RequestService {
 
@@ -22,15 +27,22 @@ public class RequestServiceImpl implements RequestService {
     @Autowired
     private RequestRepository requestRepository;
 
+    @Autowired
+    private BankRepository bankRepository;
+
     @Override
     public PccResponseDto checkIsValidAndRedirect(PccRequestDto dto) {
 
         String msg = "Starting with PCC...";
         System.out.println(msg);
 
+        Request r = createNewRequest(dto);
+
         if(!checkIsValidRequest(dto)){
-            msg = "Request in not valid!";
+            msg = "Request in not valid or pan doesn't exist!";
             System.out.println(msg);
+            r.setStatus(TransactionStatus.ERROR); //TODO: provjeri da li je error ili failed
+            requestRepository.save(r);
             //u slucaju neispravnog zahtjeva, vraca se na banku 1
             return createPccResponse(dto);
         }
@@ -40,12 +52,33 @@ public class RequestServiceImpl implements RequestService {
         System.out.println(msg);
 
         PccResponseDto response = sendRequestToIssuerBank(dto).getBody();
-        Request r = createNewRequest(dto);
+        if(response == null){
+            return createPccResponse(dto);
+        }
+
+        r.setStatus(findStatus(response.getTransactionStatus()));
         r.setIssuerOrderId(response.getIssuerOrderId());
         r.setIssuerTimestamp(response.getIssuerTimestamp());
         requestRepository.save(r);
 
         return response;
+    }
+
+    private TransactionStatus findStatus(String status){
+        if(status.equals(TransactionStatus.SUCCESS.toString())){
+            return TransactionStatus.SUCCESS;
+        }
+        else if(status.equals(TransactionStatus.FAILED.toString())){
+            return TransactionStatus.FAILED;
+        }
+        else if(status.equals(TransactionStatus.ERROR.toString())){
+            return TransactionStatus.ERROR;
+        }
+        else if(status.equals(TransactionStatus.CREATED.toString())){
+            return TransactionStatus.CREATED;
+        }
+
+        return null;
     }
 
     Boolean checkIsValidRequest(PccRequestDto dto){
@@ -54,7 +87,7 @@ public class RequestServiceImpl implements RequestService {
         if(dto.getAcquirerOrderId() == null){
             return false;
         }
-        else if(dto.getAcquirerTimestamp() == null){
+        else if(dto.getAcquirerTimestamp() == null || dto.getAcquirerTimestamp().isAfter(LocalDateTime.now())){
             return false;
         }
         else if(dto.getCvv() == null){
@@ -72,13 +105,13 @@ public class RequestServiceImpl implements RequestService {
         else if(dto.getYy() == null){
             return false;
         }
-        else if(dto.getAmount() == null){
+        else if(dto.getAmount() == null || dto.getAmount() <= 0){
             return false;
         }
         else if(dto.getMerchantOrderId() == null){
             return false;
         }
-        else if(dto.getMerchantTimestamp() == null){
+        else if(dto.getMerchantTimestamp() == null || dto.getMerchantTimestamp().isAfter(LocalDateTime.now())){
             return false;
         }
         else if(dto.getSuccessURL() == null){
@@ -87,21 +120,29 @@ public class RequestServiceImpl implements RequestService {
         else if(dto.getFailedURL() == null){
             return false;
         }
-        else if(dto.getErrorURL() == null){
+        else if(dto.getErrorURL() == null) {
             return false;
         }
-        else{
-            return true;
+        //provjera da li postoji pan broj
+        for(Bank b: bankRepository.findAll()){
+            if(dto.getPan().substring(0,6).equals(b.getPan())){
+                return true;
+            }
         }
+
+        return false;
     }
 
 
     private ResponseEntity<PccResponseDto> sendRequestToIssuerBank(PccRequestDto requestForIssuerBank) {
 
-        System.out.println("na ovaj url se salje:" + environment.getProperty("issuer-bank.pay"));
+        String url = findBankUrlToRedirect(requestForIssuerBank);
+
+        System.out.println("na ovaj url se salje:" + url);
+
         ResponseEntity<PccResponseDto> issuerBankResponse = WebClient.builder()
                 .build().post()
-                .uri(environment.getProperty("issuer-bank.pay"))
+                .uri(url)
                 .body(BodyInserters.fromValue(requestForIssuerBank))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
@@ -125,6 +166,7 @@ public class RequestServiceImpl implements RequestService {
         r.setSuccessURL(dto.getSuccessURL());
         r.setFailedURL(dto.getFailedURL());
         r.setErrorURL(dto.getErrorURL());
+        r.setStatus(TransactionStatus.CREATED);
 
         return requestRepository.save(r);
     }
@@ -138,6 +180,13 @@ public class RequestServiceImpl implements RequestService {
         return res;
     }
 
-
+    String findBankUrlToRedirect(PccRequestDto requestForIssuerBank){
+        for(Bank b: bankRepository.findAll()){
+            if(b.getPan().equals(requestForIssuerBank.getPan().substring(0, 6))){
+                return b.getUrl();
+            }
+        }
+        return "";
+    }
 
 }
