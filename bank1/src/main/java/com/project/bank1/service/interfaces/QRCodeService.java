@@ -13,4 +13,5 @@ public interface QRCodeService {
     byte[] getQRCodeImage(String text, int width, int height) throws WriterException, IOException;
     String qrCodeGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException;
     Boolean decodeQRCode(String qr) throws IOException;
+    GenerateQRCodeDTO getQrCodeData(String paymentId);
 }

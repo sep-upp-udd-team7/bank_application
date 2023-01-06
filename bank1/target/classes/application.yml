@@ -39,6 +39,7 @@ bank:
   frontend:
     url: 'http://localhost:3000/'
     credit-card-data-module: 'credit-card'
+    qr-code: 'qr-code'
 
 psp:
   finish-payment: 'http://localhost:8000/bank-service/credit-cards/finishPayment'

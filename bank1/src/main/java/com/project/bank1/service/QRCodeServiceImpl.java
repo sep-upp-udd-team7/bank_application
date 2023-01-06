@@ -10,8 +10,11 @@ import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.project.bank1.dto.GenerateQRCodeDTO;
+import com.project.bank1.model.Transaction;
 import com.project.bank1.service.interfaces.QRCodeService;
+import com.project.bank1.service.interfaces.TransactionService;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -31,6 +34,9 @@ import java.util.Map;
 
 @Service
 public class QRCodeServiceImpl implements QRCodeService {
+
+    @Autowired
+    TransactionService transactionService;
 
     @Override
     public void generateQRCodeImage(String text, int width, int height, String filePath) throws WriterException, IOException {
@@ -126,6 +132,17 @@ public class QRCodeServiceImpl implements QRCodeService {
             System.out.println("There is no QR code in the image");
             return false;
         }
+    }
+
+    @Override
+    public GenerateQRCodeDTO getQrCodeData(String paymentId) {
+        Transaction t = transactionService.findByPaymentId(paymentId.toString());
+        GenerateQRCodeDTO qr = new GenerateQRCodeDTO();
+        qr.setAmount(t.getAmount());
+        qr.setReceiver(t.getBankAccount().getClient().getName());
+        qr.setAccountNumber(t.getBankAccount().getBankAccountNumber());
+        qr.setIdTransaction(t.getId());
+        return qr;
     }
 
 }

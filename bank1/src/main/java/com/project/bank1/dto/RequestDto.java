@@ -14,4 +14,5 @@ public class RequestDto {
     private String successUrl;
     private String failedUrl;
     private String errorUrl;
+    private Boolean qrCode;
 }

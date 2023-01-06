@@ -87,4 +87,14 @@ public class QRCodeController {
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
+    @GetMapping("/getQrCodeData/{paymentId}")
+    public ResponseEntity<?> getQrCodeData(@PathVariable String paymentId){
+        GenerateQRCodeDTO qr = qrService.getQrCodeData(paymentId);
+        if(qr == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<>(qr, HttpStatus.OK);
+    }
+
 }

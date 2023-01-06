@@ -64,6 +64,8 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     public AcquirerResponseDto validateAcquirer(RequestDto dto) throws Exception {
+        System.out.println("Validate acquirer.....");
+
         if (!clientService.validateMerchantData(dto.getMerchantId(), dto.getMerchantPassword())) {
             throw new Exception("Error while validating merchant credentials");
         }
@@ -71,11 +73,23 @@ public class BankAccountServiceImpl implements BankAccountService {
         if (transaction == null) {
             throw new Exception("Error when creating acquirer's transaction");
         }
-        String paymentUrl = environment.getProperty("bank.frontend.url") + environment
-                .getProperty("bank.frontend.credit-card-data-module") + "/" + transaction.getId();
-
+        //TODO:u zavisnosti da li je qr code placanje ili kartica promijeniti url
         AcquirerResponseDto response = new AcquirerResponseDto();
         response.setPaymentId(String.valueOf(transaction.getId()));
+
+        String paymentUrl = "";
+        if(!dto.getQrCode()){
+            paymentUrl = environment.getProperty("bank.frontend.url") + environment
+                    .getProperty("bank.frontend.credit-card-data-module") + "/" + transaction.getId();
+        }
+        else{
+            paymentUrl = environment.getProperty("bank.frontend.url") + environment
+                    .getProperty("bank.frontend.qr-code") + "/" + transaction.getId();
+            response.setAmount(dto.getAmount());
+            response.setAcquirer(transaction.getBankAccount().getClient().getName());
+            response.setAcquirerBankAccount(transaction.getBankAccount().getBankAccountNumber());
+        }
+
         response.setPaymentUrl(paymentUrl);
         transactionService.save(transaction);
         return response;

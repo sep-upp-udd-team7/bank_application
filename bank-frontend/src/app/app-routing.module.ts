@@ -1,3 +1,4 @@
+import { QrCodeComponent } from './components/qr-code/qr-code.component';
 import { CardInfoComponent } from './components/card-info/card-info.component';
 import { PersonalInfoComponent } from './components/personal-info/personal-info.component';
 import { SignUpComponent } from './components/sign-up/sign-up.component';
@@ -23,6 +24,10 @@ const routes: Routes = [
   {
     path: 'credit-card/:paymentId',
     component: CardInfoComponent,
+  },
+  {
+    path: 'qr-code/:paymentId',
+    component: QrCodeComponent,
   },
   
 ];
