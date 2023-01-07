@@ -66,7 +66,7 @@ public class QRCodeController {
 
         String decodirano = new String(qr);
         System.out.println("DEKODIRANO:" + decodirano);
-        return "qrcode";
+        return qr;
     }
 
     @GetMapping("/validateQRCode")
