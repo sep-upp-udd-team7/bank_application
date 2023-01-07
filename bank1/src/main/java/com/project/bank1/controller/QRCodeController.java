@@ -57,8 +57,7 @@ public class QRCodeController {
         return "qrcode";
     }
 
-
-    @GetMapping("/getQRCode")
+    @RequestMapping(method = RequestMethod.POST, value = "/getQRCode")
     public String qrCodeGenerator(@RequestBody GenerateQRCodeDTO dto) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
 
         String qr = qrService.qrCodeGenerator(dto);
