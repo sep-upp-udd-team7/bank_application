@@ -1,1 +1,8 @@
-<img src="{{'data:image/jpg;base64,' + imagePath}}" style="width: 250px;"/>
+<div style="margin-left: 42%;">
+    <h5 style="margin-left: 7%;">Scan qr code</h5>
+    <img src="{{'data:image/jpg;base64,' + imagePath}}" style="width: 250px;"/>
+    <button class="btn btn-primary" style="margin-left: 10%;" (click)="nextStep()">Next</button>
+    <br><br><input *ngIf="next" [(ngModel)]="this.email" name="merchantId" type="text" style="width: 250px;" placeholder="Enter email">
+    <br><br><button [disabled]="!this.email" ngDefaultControl *ngIf="next"  class="btn btn-primary" style="margin-left: 10%;" (click)="continue()">Continue</button>
+
+</div>

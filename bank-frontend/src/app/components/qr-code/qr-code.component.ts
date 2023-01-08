@@ -14,6 +14,8 @@ export class QrCodeComponent implements OnInit {
   qrCodeData
   imagePath = ""
   image
+  next : Boolean = false
+  email = ""
 
   ngOnInit(): void {
     var url = window.location.href;
@@ -29,6 +31,14 @@ export class QrCodeComponent implements OnInit {
       })
     })
 
+  }
+
+  nextStep(){
+    this.next = !this.next
+  }
+
+  continue(){
+    console.log(this.email)
   }
 
 }
