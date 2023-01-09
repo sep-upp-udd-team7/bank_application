@@ -76,22 +76,24 @@ public class BankAccountServiceImpl implements BankAccountService {
             throw new Exception("Error when creating acquirer's transaction");
         }
         //TODO:u zavisnosti da li je qr code placanje ili kartica promijeniti url
+        System.out.println("Creating response....");
         AcquirerResponseDto response = new AcquirerResponseDto();
         response.setPaymentId(String.valueOf(transaction.getId()));
 
         String paymentUrl = "";
         if(!dto.getQrCode()){
+            System.out.println("Credit card.....");
             paymentUrl = environment.getProperty("bank.frontend.url") + environment
                     .getProperty("bank.frontend.credit-card-data-module") + "/" + transaction.getId();
         }
         else{
+            System.out.println("Qr code....");
             paymentUrl = environment.getProperty("bank.frontend.url") + environment
                     .getProperty("bank.frontend.qr-code") + "/" + transaction.getId();
-            response.setAmount(dto.getAmount());
-            response.setAcquirer(transaction.getBankAccount().getClient().getName());
-            response.setAcquirerBankAccount(transaction.getBankAccount().getBankAccountNumber());
         }
-
+        response.setAmount(dto.getAmount());
+        response.setAcquirer(transaction.getBankAccount().getClient().getName());
+        response.setAcquirerBankAccount(transaction.getBankAccount().getBankAccountNumber());
         response.setPaymentUrl(paymentUrl);
         transactionService.save(transaction);
         return response;

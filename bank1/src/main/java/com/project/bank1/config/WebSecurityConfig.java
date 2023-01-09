@@ -62,6 +62,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("**/registration").permitAll()
                 .antMatchers("**/getQR").permitAll()
                 .antMatchers("**/getQRCode").permitAll()
+                .antMatchers("**/getQRCodeData/**").permitAll()
                 .antMatchers("**/login").permitAll()
                 .antMatchers("**/validateAcquirer").permitAll()
                 .antMatchers("**/validateIssuer").permitAll()
@@ -93,6 +94,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         web.ignoring().antMatchers(HttpMethod.GET, "/**/getAll/**");
         web.ignoring().antMatchers(HttpMethod.GET, "/**/getAll/**");
         web.ignoring().antMatchers(HttpMethod.POST, "/**/getQRCode");
+        web.ignoring().antMatchers(HttpMethod.GET, "/**/getQrCodeData/**");
         web.ignoring().antMatchers(HttpMethod.GET, "**/h2-console/**");
 
         web.ignoring().antMatchers(HttpMethod.GET, "/", "/webjars/**", "/*.html", "favicon.ico", "/**/*.html",

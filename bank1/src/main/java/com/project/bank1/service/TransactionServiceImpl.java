@@ -34,6 +34,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Transaction createTransaction(RequestDto dto) {
+        System.out.println("Create transaction.....");
         BankAccount acquirerBankAccount = bankAccountService.findBankAccountByMerchantId(dto.getMerchantId());
         if (acquirerBankAccount == null) {
             System.out.println("Acquirer bank account not found!");
