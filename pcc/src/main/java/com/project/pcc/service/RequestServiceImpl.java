@@ -197,15 +197,25 @@ public class RequestServiceImpl implements RequestService {
     }
 
     String findBankUrlToRedirect(PccRequestDto requestForIssuerBank){
-
+        System.out.println("Finding bank 2 url.....");
         for(Bank b: bankRepository.findAll()){
-            if(requestForIssuerBank.getPan() != null && b.getPan().equals(requestForIssuerBank.getPan().substring(0, 6))){
-                return b.getUrl();
+            System.out.println(b.getPan());
+            if(requestForIssuerBank.getPan() != null){
+                System.out.println("PAN != null");
+                System.out.println(requestForIssuerBank.getPan().substring(0, 6));
+                if(b.getPan().equals(requestForIssuerBank.getPan().substring(0, 6))){
+                    System.out.println("Credit card payment.....");
+                    return b.getUrl();
+                }
+            }else{
+                if(requestForIssuerBank.getBankName().equals(b.getName())){
+                    System.out.println("Qr code payment.....");
+                    return b.getUrl();
+                }
             }
-            if(requestForIssuerBank.getBankName().equals(b.getName())){
-                return b.getUrl();
-            }
+
         }
+        System.out.println("Bank url not found....");
         return "";
     }
 
