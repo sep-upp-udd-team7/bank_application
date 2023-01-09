@@ -30,6 +30,7 @@ public class BankAccountController {
 
     @RequestMapping(method = RequestMethod.POST, value = "/validateIssuer", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> validateIssuer(@RequestBody IssuerRequestDto dto) {
+        System.out.println("Bank 2 validateIssuer controller");
         return new ResponseEntity<>(bankAccountService.validateIssuer(dto), HttpStatus.OK);
 //        try {
 //            return new ResponseEntity<>(bankAccountService.validateIssuer(dto), HttpStatus.OK);
@@ -42,7 +43,7 @@ public class BankAccountController {
     @RequestMapping(method = RequestMethod.POST, value = "/issuerBankPayment", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> issuerPaymentDifferentBanks(@RequestBody PccRequestDto dto) {
        // return new ResponseEntity<>(bankAccountService.issuerPaymentDifferentBanks(dto), HttpStatus.OK);
-        System.out.println("uslo je u banku2 controller iz pcc-a");
+        System.out.println("Bank 2 controller from pcc request.......");
 
         try {
             return new ResponseEntity<>(bankAccountService.issuerPaymentDifferentBanks(dto), HttpStatus.OK);

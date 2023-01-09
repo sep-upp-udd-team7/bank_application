@@ -26,6 +26,10 @@ public class Request {
     @Column(name = "acquirer_timestamp")
     private LocalDateTime acquirerTimestamp;
 
+    @Column(name = "issuer")
+    private String issuer;
+
+   /*
     @Column(name = "cardholder_name")
     private String cardHolderName;
 
@@ -39,7 +43,7 @@ public class Request {
     private String yy;
 
     @Column(name = "cvv")
-    private String cvv;
+    private String cvv;*/
 
     @Column(name = "amount")
     private Double amount;
@@ -68,5 +72,9 @@ public class Request {
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private TransactionStatus status;
+
+    @Column(name = "qr_code_payment")
+    private Boolean qrCodePayment;
+
 
 }

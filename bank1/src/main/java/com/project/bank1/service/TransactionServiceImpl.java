@@ -8,6 +8,7 @@ import com.project.bank1.model.CreditCard;
 import com.project.bank1.model.Transaction;
 import com.project.bank1.repository.TransactionRepository;
 import com.project.bank1.service.interfaces.BankAccountService;
+import com.project.bank1.service.interfaces.ClientService;
 import com.project.bank1.service.interfaces.CreditCardService;
 import com.project.bank1.service.interfaces.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Autowired
     private CreditCardService creditCardService;
+    @Autowired
+    private ClientService clientService;
 
     @Override
     public Transaction createTransaction(RequestDto dto) {
@@ -87,7 +90,18 @@ public class TransactionServiceImpl implements TransactionService {
 
 
     public Transaction createTransactionForIssuer(PccRequestDto dto) {
-        CreditCard cc = creditCardService.findByPan(dto.getPan());
+        System.out.println("Create transaction for issuer........");
+
+        CreditCard cc;
+        if(dto.getIssuer() == null){
+            System.out.println("Credit card payment....");
+            cc = creditCardService.findByPan(dto.getPan());
+        }
+        else{
+            System.out.println("Qr code payment....");
+            cc = clientService.getByEmail(dto.getIssuer()).getBankAccount().getCreditCard();
+        }
+
         BankAccount issuerBankAccount = bankAccountService.findBankAccountByCreditCardId(cc.getId());
 
         if (issuerBankAccount == null) {

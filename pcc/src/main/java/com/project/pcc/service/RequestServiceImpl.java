@@ -53,9 +53,10 @@ public class RequestServiceImpl implements RequestService {
 
         PccResponseDto response = sendRequestToIssuerBank(dto).getBody();
         if(response == null){
+            System.out.println("Resposne from bank 2 is null....");
             return createPccResponse(dto);
         }
-
+        System.out.println("Resposne from bank 2 is not null....");
         r.setStatus(findStatus(response.getTransactionStatus()));
         r.setIssuerOrderId(response.getIssuerOrderId());
         r.setIssuerTimestamp(response.getIssuerTimestamp());
@@ -87,22 +88,7 @@ public class RequestServiceImpl implements RequestService {
         if(dto.getAcquirerOrderId() == null){
             return false;
         }
-        else if(dto.getAcquirerTimestamp() == null || dto.getAcquirerTimestamp().isAfter(LocalDateTime.now())){
-            return false;
-        }
-        else if(dto.getCvv() == null){
-            return false;
-        }
-        else if(dto.getCardHolderName() == null){
-            return false;
-        }
-        else if(dto.getPan() == null){
-            return false;
-        }
-        else if(dto.getMm() == null){
-            return false;
-        }
-        else if(dto.getYy() == null){
+        /*else if(dto.getAcquirerTimestamp() == null || dto.getAcquirerTimestamp().isAfter(LocalDateTime.now())){
             return false;
         }
         else if(dto.getAmount() == null || dto.getAmount() <= 0){
@@ -122,11 +108,26 @@ public class RequestServiceImpl implements RequestService {
         }
         else if(dto.getErrorURL() == null) {
             return false;
+        }*/
+        System.out.println("*********************************");
+        System.out.println("PAN is:" + dto.getPan());
+        System.out.println("Bank name is: " + dto.getBankName());
+        //provjera da li banka
+        if(dto.getPan() != null){
+            System.out.println("PAN is not null, finding bank");
+            System.out.println("PAN is: " + dto.getPan());
+            for(Bank b: bankRepository.findAll()){
+                if(dto.getPan().substring(0,6).equals(b.getPan())){
+                    return true;
+                }
+            }
         }
-        //provjera da li postoji pan broj
-        for(Bank b: bankRepository.findAll()){
-            if(dto.getPan().substring(0,6).equals(b.getPan())){
-                return true;
+        else{
+            System.out.println("PAN is null, finding bank by name: " + dto.getBankName());
+            for(Bank b: bankRepository.findAll()){
+                if(b.getName().equals(dto.getBankName())){
+                    return true;
+                }
             }
         }
 
@@ -155,11 +156,6 @@ public class RequestServiceImpl implements RequestService {
         Request r = new Request();
         r.setAcquirerOrderId(dto.getAcquirerOrderId());
         r.setAcquirerTimestamp(dto.getAcquirerTimestamp());
-        r.setCardHolderName(dto.getCardHolderName());
-        r.setCvv(dto.getCvv());
-        r.setPan(dto.getPan());
-        r.setMm(dto.getMm());
-        r.setYy(dto.getYy());
         r.setAmount(dto.getAmount());
         r.setMerchantOrderId(dto.getMerchantOrderId());
         r.setMerchantTimestamp(dto.getMerchantTimestamp());
@@ -167,6 +163,26 @@ public class RequestServiceImpl implements RequestService {
         r.setFailedURL(dto.getFailedURL());
         r.setErrorURL(dto.getErrorURL());
         r.setStatus(TransactionStatus.CREATED);
+        r.setQrCodePayment(dto.getQrCodePayment());
+        /*if(dto.getPan() != null){
+            r.setPan(dto.getPan());
+        }
+        if(dto.getCvv() != null){
+            r.setCvv(dto.getCvv());
+        }
+        if(dto.getMm() != null){
+            r.setMm(dto.getMm());
+        }
+        if(dto.getYy() != null){
+            r.setYy(dto.getYy());
+        }*/
+        if(dto.getCardHolderName() != null){
+            r.setIssuer(dto.getCardHolderName());
+        }
+        else if(dto.getIssuer() != null){
+            r.setIssuer(dto.getIssuer());
+        }
+
 
         return requestRepository.save(r);
     }
@@ -181,8 +197,12 @@ public class RequestServiceImpl implements RequestService {
     }
 
     String findBankUrlToRedirect(PccRequestDto requestForIssuerBank){
+
         for(Bank b: bankRepository.findAll()){
-            if(b.getPan().equals(requestForIssuerBank.getPan().substring(0, 6))){
+            if(requestForIssuerBank.getPan() != null && b.getPan().equals(requestForIssuerBank.getPan().substring(0, 6))){
+                return b.getUrl();
+            }
+            if(requestForIssuerBank.getBankName().equals(b.getName())){
                 return b.getUrl();
             }
         }

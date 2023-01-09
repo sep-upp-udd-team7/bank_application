@@ -7,6 +7,7 @@ import com.project.bank1.model.Client;
 import com.project.bank1.model.CreditCard;
 import com.project.bank1.model.Transaction;
 import com.project.bank1.repository.BankAccountRepository;
+import com.project.bank1.repository.ClientRepository;
 import com.project.bank1.service.interfaces.BankAccountService;
 import com.project.bank1.service.interfaces.ClientService;
 import com.project.bank1.service.interfaces.CreditCardService;
@@ -37,7 +38,8 @@ public class BankAccountServiceImpl implements BankAccountService {
     private Environment environment;
     @Autowired
     private TransactionService transactionService;
-
+    @Autowired
+    private ClientRepository clientRepository;
 
 //    @Autowired(required = false)
 //    private WebClient webClient;
@@ -107,6 +109,22 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     public String validateIssuer(IssuerRequestDto dto) {
+        System.out.println("Bank 2 validate issuer service.....");
+        if(dto.getIssuer() != null && dto.getBankName() != null){
+            System.out.println("Qr code payment....");
+            Client c = clientService.getByEmail(dto.getIssuer());
+
+            if (c != null) { //kupac i prodavac su u istoj banci
+                System.out.println("Issuer and acquirer are in the same bank......");
+                dto.setCardHolderName(c.getName());
+                dto.setPan(c.getBankAccount().getCreditCard().getPan());
+                dto.setCvv(c.getBankAccount().getCreditCard().getCvv());
+                dto.setYy(c.getBankAccount().getCreditCard().getYy());
+                dto.setMm(c.getBankAccount().getCreditCard().getMm());
+            }
+
+        }
+
         if (!isIssuerInSameBankAsAcquirer(dto.getPan())) {
             // TODO: proslediti zahtev na PCC, za sad exception
             String msg = "Issuer and acquirer are not in the same bank! - PCC is implementing...";
@@ -213,6 +231,7 @@ public class BankAccountServiceImpl implements BankAccountService {
 
         ResponseEntity<String> pspApplicationResponse = finishPayment(transaction);
         return pspApplicationResponse.getBody();
+
     }
 
     private ResponseEntity<String> finishPayment(Transaction transaction) {
@@ -233,6 +252,7 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     private ResponseDto getRequestDtoForPspApplication(Transaction transaction) {
         // get RequestDto when issuer and acquirer are in the SAME bank
+        System.out.println("Creating dto for psp app.........");
         ResponseDto dto = new ResponseDto();
         dto.setPaymentId(transaction.getId());
         dto.setMerchantOrderId(transaction.getMerchantOrderId());
@@ -266,9 +286,12 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     private boolean isIssuerInSameBankAsAcquirer(String pan) {
-        String issuersBankPan = pan.substring(0, 6);
-        String acquirersBankPan = environment.getProperty("bank.pan");
-        return issuersBankPan.equals(acquirersBankPan);
+        if(!pan.equals("")){
+            String issuersBankPan = pan.substring(0, 6);
+            String acquirersBankPan = environment.getProperty("bank.pan");
+            return issuersBankPan.equals(acquirersBankPan);
+        }
+        return false;
     }
 
 
@@ -293,18 +316,26 @@ public class BankAccountServiceImpl implements BankAccountService {
         PccRequestDto pccRequest = new PccRequestDto();
         pccRequest.setAcquirerOrderId(generateRandomString(acquirerOrderId));
         pccRequest.setAcquirerTimestamp(LocalDateTime.now());
-        pccRequest.setCvv(dto.getCvv());
-        pccRequest.setPan(dto.getPan());
-        pccRequest.setMm(dto.getMm());
-        pccRequest.setYy(dto.getYy());
-        pccRequest.setCardHolderName(dto.getCardHolderName());
         pccRequest.setAmount(transaction.getAmount());
         pccRequest.setMerchantOrderId(transaction.getMerchantOrderId());
         pccRequest.setMerchantTimestamp(transaction.getMerchantTimestamp());
         pccRequest.setSuccessURL(transaction.getSuccessURL());
         pccRequest.setFailedURL(transaction.getFailedURL());
         pccRequest.setErrorURL(transaction.getErrorURL());
+        System.out.println("Ovo je email:" + dto.getIssuer());
+        System.out.println("Ovo je naziv banke:" + dto.getBankName());
 
+        if(dto.getIssuer() != null && dto.getBankName() != null){
+            pccRequest.setQrCodePayment(true);
+            pccRequest.setBankName(dto.getBankName());
+            pccRequest.setIssuer(dto.getIssuer());
+        }else{
+            pccRequest.setCvv(dto.getCvv());
+            pccRequest.setPan(dto.getPan());
+            pccRequest.setMm(dto.getMm());
+            pccRequest.setYy(dto.getYy());
+            pccRequest.setCardHolderName(dto.getCardHolderName());
+        }
         return pccRequest;
     }
 
@@ -329,7 +360,23 @@ public class BankAccountServiceImpl implements BankAccountService {
         System.out.println(msgs);
 
         Transaction transaction = transactionService.createTransactionForIssuer(dto);
+        if(dto.getIssuer() != null && dto.getBankName() != null){
+            System.out.println("issuerPaymentDifferentBanks qr code payment...");
+            BankAccount issuerBankAccount = findIssuerBankAccountByIssuerEmail(dto.getIssuer());
 
+            if(validQrCodePayment(dto, issuerBankAccount)){
+                System.out.println("QR code payment is valid...");
+                transaction.setIssuerBankAccountId(issuerBankAccount.getId());
+                transaction.setStatus(TransactionStatus.SUCCESS);
+            }
+            else {
+                transaction.setStatus(TransactionStatus.FAILED);
+            }
+            transactionService.save(transaction);
+            return createResponseToPcc(transaction);
+        }
+
+        System.out.println("issuerPaymentDifferentBanks credit card payment...");
         IssuerRequestDto issuerRequestDto = createIssuerRequestDto(dto);
         CreditCard issuerCreditCard = creditCardService.validateIssuerCreditCard(issuerRequestDto);
         if (issuerCreditCard == null) {
@@ -405,6 +452,34 @@ public class BankAccountServiceImpl implements BankAccountService {
     PccResponseDto createAndSendPccRequest(IssuerRequestDto dto){
         PccRequestDto pccRequest =  createPccRequest(dto);
         return sendRequestToPcc(pccRequest).getBody();
+    }
+
+    Boolean validQrCodePayment(PccRequestDto dto, BankAccount issuerBankAccount){
+
+        if (issuerBankAccount == null) {
+            String msg = "Issuer bank account not found";
+            System.out.println(msg);
+            return false;
+        }
+
+        if (issuerBankAccount.getAvailableFunds() < dto.getAmount()) {
+            System.out.println("The customer's bank account does not have enough money");
+            return false;
+        }
+        reserveFunds(issuerBankAccount, dto.getAmount());
+        issuerBankAccount.setReservedFunds(issuerBankAccount.getReservedFunds() - dto.getAmount());
+        bankAccountRepository.save(issuerBankAccount);
+
+        return true;
+    }
+
+    private BankAccount findIssuerBankAccountByIssuerEmail(String email) {
+        for(Client c: clientRepository.findAll()){
+            if(c.getEmail().equals(email)){
+                return c.getBankAccount();
+            }
+        }
+        return null;
     }
 
 }

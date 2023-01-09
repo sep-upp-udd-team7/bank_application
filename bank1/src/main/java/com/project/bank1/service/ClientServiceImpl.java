@@ -153,5 +153,10 @@ public class ClientServiceImpl implements ClientService {
         return new ClientMapper().mapClientToClientDto(client);
     }
 
+    @Override
+    public Client getByEmail(String email) {
+        return clientRepository.findByEmail(email);
+    }
+
 
 }

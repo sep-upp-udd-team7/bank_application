@@ -1,3 +1,4 @@
+import { CreditCardService } from './../../service/credit-card.service';
 import { QrCodeService } from './../../service/qr-code.service';
 import { Component, OnInit } from '@angular/core';
 
@@ -9,13 +10,14 @@ import { Component, OnInit } from '@angular/core';
 })
 export class QrCodeComponent implements OnInit {
 
-  constructor(private qrCodeService: QrCodeService) { }
+  constructor(private qrCodeService: QrCodeService, private creditCardService: CreditCardService) { }
   paymentId = ""
   qrCodeData
   imagePath = ""
   image
   next : Boolean = false
   email = ""
+  bankName = ""
 
   ngOnInit(): void {
     var url = window.location.href;
@@ -38,7 +40,31 @@ export class QrCodeComponent implements OnInit {
   }
 
   continue(){
-    console.log(this.email)
+    console.log(this.bankName)
+
+    let body = {
+      "cardHolderName": "",
+      "pan": "",
+      "mm": "",
+      "yy": "",
+      "cvv": "",
+      "paymentId": this.paymentId,
+      "qrCodePayment": true,
+      "issuer": this.email,
+      "bankName": this.bankName
+    }
+
+    this.creditCardService.validateIssuer(JSON.stringify(body)).subscribe(
+      data => { 
+        console.log(data)
+        window.location.href = data
+      }, err => {
+        console.log(err)
+        if (err.error.includes("http")) {
+          window.location.href = err.error
+        }
+      }
+    );
   }
 
 }

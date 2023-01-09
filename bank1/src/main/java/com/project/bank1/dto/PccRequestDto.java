@@ -22,4 +22,8 @@ public class PccRequestDto {
     private String successURL;
     private String failedURL;
     private String errorURL;
+    private Boolean qrCodePayment = false;
+    private String bankName;
+    private String issuer;
+
 }
