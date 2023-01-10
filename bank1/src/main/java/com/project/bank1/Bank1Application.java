@@ -20,6 +20,7 @@ public class Bank1Application implements CommandLineRunner {
 	public void run(String... args) throws Exception {
 		insert();
 	}
+
 	private void insert() {
 		ClientType clientType = new ClientType();
 		clientType.setName("ROLE_CLIENT");

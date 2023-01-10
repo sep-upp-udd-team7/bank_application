@@ -19,7 +19,6 @@ import java.util.Random;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
-
     private static int issuerOrderId = 10;
 
     @Autowired

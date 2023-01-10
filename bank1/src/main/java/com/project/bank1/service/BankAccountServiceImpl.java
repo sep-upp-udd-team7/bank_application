@@ -12,6 +12,7 @@ import com.project.bank1.service.interfaces.BankAccountService;
 import com.project.bank1.service.interfaces.ClientService;
 import com.project.bank1.service.interfaces.CreditCardService;
 import com.project.bank1.service.interfaces.TransactionService;
+import org.aspectj.bridge.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
@@ -20,12 +21,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Random;
 
 @Service
 public class BankAccountServiceImpl implements BankAccountService {
+    private LoggerService loggerService = new LoggerService(this.getClass());
     private static int acquirerOrderId = 10;
 
     @Autowired
@@ -41,11 +44,9 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Autowired
     private ClientRepository clientRepository;
 
-//    @Autowired(required = false)
-//    private WebClient webClient;
-
     @Override
     public BankAccount addBankAccount(Client client) {
+        loggerService.infoLog(MessageFormat.format("Creating bank account for client with name: {0}", client.getName()));
         BankAccount bankAccount = new BankAccount();
         bankAccount.setAvailableFunds((double) 1000);
         bankAccount.setReservedFunds((double) 0);
@@ -54,40 +55,43 @@ public class BankAccountServiceImpl implements BankAccountService {
         bankAccount.setClient(client);
         bankAccount.setBankAccountNumber(generateBankAccountNumber(18));
         bankAccountRepository.save(bankAccount);
+        loggerService.successLog(MessageFormat.format("Bank account created for client with name: {0}", client.getName()));
         return bankAccount;
     }
 
     private String generateBankAccountNumber(int length) { // ziro racun ima 18 cifara
+        loggerService.infoLog(MessageFormat.format("Generating bank account number of length with {0} characters", length));
         double rndNum = Math.random();
         long number = (long) (rndNum * Math.pow(10, length));
-        System.out.println("Generated bank account number: " + number);
         return String.valueOf(number);
     }
 
     @Override
     public AcquirerResponseDto validateAcquirer(RequestDto dto) throws Exception {
-        System.out.println("Validate acquirer.....");
-
+        loggerService.infoLog(MessageFormat.format("Starting acquirer validation with merchant order ID: {0}", dto.getMerchantOrderId()));
         if (!clientService.validateMerchantData(dto.getMerchantId(), dto.getMerchantPassword())) {
+            loggerService.errorLog(MessageFormat.format("Incorrect merchant credentials or client with merchant ID: {0} does not exist", dto.getMerchantId()));
             throw new Exception("Error while validating merchant credentials");
         }
+
         Transaction transaction = transactionService.createTransaction(dto);
         if (transaction == null) {
+            loggerService.errorLog("Acquirer's transaction is not created");
             throw new Exception("Error when creating acquirer's transaction");
         }
+        loggerService.debugLog(MessageFormat.format("Created acquirer's transaction for paying order with ID: {0}", transaction.getMerchantOrderId()));
+
         //TODO:u zavisnosti da li je qr code placanje ili kartica promijeniti url
-        System.out.println("Creating response....");
         AcquirerResponseDto response = new AcquirerResponseDto();
         response.setPaymentId(String.valueOf(transaction.getId()));
-
         String paymentUrl = "";
         if(!dto.getQrCode()){
-            System.out.println("Credit card.....");
+            loggerService.debugLog(MessageFormat.format("Payment option is credit card for order with ID: {0}", dto.getMerchantOrderId()));
             paymentUrl = environment.getProperty("bank.frontend.url") + environment
                     .getProperty("bank.frontend.credit-card-data-module") + "/" + transaction.getId();
         }
         else{
-            System.out.println("Qr code....");
+            loggerService.debugLog(MessageFormat.format("Payment option is QR code for order with ID: {0}", dto.getMerchantOrderId()));
             paymentUrl = environment.getProperty("bank.frontend.url") + environment
                     .getProperty("bank.frontend.qr-code") + "/" + transaction.getId();
         }
@@ -96,77 +100,72 @@ public class BankAccountServiceImpl implements BankAccountService {
         response.setAcquirerBankAccount(transaction.getBankAccount().getBankAccountNumber());
         response.setPaymentUrl(paymentUrl);
         transactionService.save(transaction);
+        loggerService.successLog(MessageFormat.format("Successful acquirer validation for order with ID: {0}", dto.getMerchantOrderId()));
         return response;
     }
 
     @Override
     public BankAccount findBankAccountByMerchantId(String merchantId) {
+        loggerService.infoLog(MessageFormat.format("Finding bank account by merchant ID: {0}", merchantId));
         for (BankAccount ba: bankAccountRepository.findAll()) {
             if (ba.getClient().getMerchantId().equals(merchantId)) {
+                loggerService.successLog(MessageFormat.format("Found bank account with ID: {0}", ba.getId()));
                 return ba;
             }
         }
+        loggerService.warnLog(MessageFormat.format("Bank account not found by merchant ID: {0}", merchantId));
         return null;
     }
 
     @Override
     public String validateIssuer(IssuerRequestDto dto) {
-        System.out.println("Bank 2 validate issuer service.....");
+        loggerService.infoLog(MessageFormat.format("Starting issuer validation for payment with ID: {0}", dto.getPaymentId()));
         if(dto.getIssuer() != null && dto.getBankName() != null){
-            System.out.println("Qr code payment....");
+            loggerService.debugLog("QR code payment option is selected");
             Client c = clientService.getByEmail(dto.getIssuer());
 
-            if (c != null) { //kupac i prodavac su u istoj banci
-                System.out.println("Issuer and acquirer are in the same bank......");
+            if (c != null) { // kupac i prodavac su u istoj banci
+                loggerService.debugLog("Issuer and acquirer are in the same bank");
                 dto.setCardHolderName(c.getName());
                 dto.setPan(c.getBankAccount().getCreditCard().getPan());
                 dto.setCvv(c.getBankAccount().getCreditCard().getCvv());
                 dto.setYy(c.getBankAccount().getCreditCard().getYy());
                 dto.setMm(c.getBankAccount().getCreditCard().getMm());
             }
-
         }
 
         if (!isIssuerInSameBankAsAcquirer(dto.getPan())) {
-            // TODO: proslediti zahtev na PCC, za sad exception
-            String msg = "Issuer and acquirer are not in the same bank! - PCC is implementing...";
-            System.out.println(msg);
-
+            loggerService.debugLog("Issuer and acquirer are not in the same bank");
             PccResponseDto pccResponse = createAndSendPccRequest(dto);
-            System.out.println("Ovo je payment id1: " + dto.getPaymentId());
+            loggerService.debugLog(MessageFormat.format("Request sent to PCC for execution payment with ID: {0}", dto.getPaymentId()));
 
             Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
             if (transaction == null) {
-                msg = "Transaction with id " + dto.getPaymentId() + " not found";
-                System.out.println(msg);
+                loggerService.errorLog(MessageFormat.format("Transaction with ID: {0} not found", dto.getPaymentId()));
                 transaction.setStatus(TransactionStatus.ERROR);
                 transactionService.save(transaction);
                 return finishPayment(transaction).getBody();
             }
-
             transaction.setAcquirerOrderId(pccResponse.getAcquirerOrderId());
             transaction.setAcquirerTimestamp(pccResponse.getAcquirerTimestamp());
             transaction.setIssuerTimestamp(pccResponse.getIssuerTimestamp());
             transaction.setIssuerOrderId(pccResponse.getIssuerOrderId());
             transaction.setIssuerBankAccountId(pccResponse.getIssuerBankAccountId());
+            loggerService.debugLog(MessageFormat.format("Supplementing data on a transaction that has ID: {0}", transaction.getId()));
 
             if(pccResponse.getTransactionStatus().equals(TransactionStatus.FAILED.toString())){
-                msg = "Something was failed in issuer bank!";
-                System.out.println(msg);
+                loggerService.errorLog("Something was FAILED in issuer bank");
                 transaction.setStatus(TransactionStatus.FAILED);
                 transactionService.save(transaction);
                 return finishPayment(transaction).getBody();
             }
             else if(pccResponse.getTransactionStatus().equals(TransactionStatus.ERROR.toString())){
-                msg = "There was an error in issuer bank!";
-                System.out.println(msg);
+                loggerService.errorLog("There was an ERROR in issuer bank");
                 transaction.setStatus(TransactionStatus.ERROR);
                 transactionService.save(transaction);
                 return finishPayment(transaction).getBody();
             }
-
-
-            //prebacivanje novca na racun prodavca
+            loggerService.debugLog("Transfer of money to the issuer's account");
             BankAccount acquirerBankAccount = transaction.getBankAccount();
             Double newAvailableFundsAcquirer = acquirerBankAccount.getAvailableFunds() + transaction.getAmount();
             acquirerBankAccount.setAvailableFunds(newAvailableFundsAcquirer);
@@ -174,57 +173,52 @@ public class BankAccountServiceImpl implements BankAccountService {
 
             //TODO: poslati mozda payment id i azurirati transakciju a ne dodati novu
             transaction.setStatus(TransactionStatus.SUCCESS);
-            System.out.println("Ovo je payment id2: " + transaction.getId());
-
             transactionService.save(transaction);
-
             return finishPayment(transaction).getBody();
         }
 
+        loggerService.debugLog("Issuer and acquirer are in the same bank");
         Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
         if (transaction == null) {
-            String msg = "Transaction with id " + dto.getPaymentId() + " not found";
-            System.out.println(msg);
+            loggerService.errorLog(MessageFormat.format("Transaction with ID: {0} not found", dto.getPaymentId()));
             transaction.setStatus(TransactionStatus.ERROR);
             transactionService.save(transaction);
             return finishPayment(transaction).getBody();
-            //throw new Exception();
         }
 
         CreditCard issuerCreditCard = creditCardService.validateIssuerCreditCard(dto);
         if (issuerCreditCard == null) {
-            String msg = "The issuer's credit card credentials are NOT correct or or the credit card has expired";
-            System.out.println(msg);
+            loggerService.errorLog("The issuer's credit card credentials are incorrect or or the credit card has expired");
             transaction.setStatus(TransactionStatus.FAILED);
             transactionService.save(transaction);
             return finishPayment(transaction).getBody();
-            //throw new Exception(transaction.getErrorURL());
         }
         BankAccount issuerBankAccount = findIssuerBankAccountByCreditCardId(issuerCreditCard.getId());
         if (issuerBankAccount == null) {
-            String msg = "Issuer bank account not found";
-            System.out.println(msg);
+            loggerService.errorLog("Issuer bank account not found by credit card ID");
             transaction.setStatus(TransactionStatus.ERROR);
             transactionService.save(transaction);
             return finishPayment(transaction).getBody();
-            //throw new Exception(transaction.getErrorURL());
         }
         transaction.setIssuerBankAccountId(issuerBankAccount.getId());
 
+
         if (issuerBankAccount.getAvailableFunds() < transaction.getAmount()) {
+            loggerService.errorLog("The issuer's bank account does not have enough money");
             transaction.setStatus(TransactionStatus.FAILED);
             transactionService.save(transaction);
-            System.out.println("The customer's bank account does not have enough money");
+            System.out.println();
             return finishPayment(transaction).getBody();
-//            throw new FailedTransactionException("The customer's bank account does not have enough money", transaction.getFailedURL());
         }
+        loggerService.debugLog(MessageFormat.format("Reserving funds by issuer: {0} and amount: {1}", issuerCreditCard.getCardHolderName(), transaction.getAmount()));
         reserveFunds(issuerBankAccount, transaction.getAmount());
 
-        // prebacivanje sredstava na racun prodavca
         BankAccount acquirerBankAccount = transaction.getBankAccount();
+        loggerService.debugLog(MessageFormat.format("Money transfer from issuer bank ID: {0} to acquirer bank ID: {1}", issuerBankAccount.getId(), acquirerBankAccount.getId()));
         Double newAvailableFundsAcquirer = acquirerBankAccount.getAvailableFunds() + transaction.getAmount();
         acquirerBankAccount.setAvailableFunds(newAvailableFundsAcquirer);
 
+        loggerService.debugLog(MessageFormat.format("Removing reserved funds from issuer: {0} and amount: {1}", issuerCreditCard.getCardHolderName(), transaction.getAmount()));
         issuerBankAccount.setReservedFunds(issuerBankAccount.getReservedFunds() - transaction.getAmount());
         bankAccountRepository.save(issuerBankAccount);
 
@@ -237,8 +231,8 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     private ResponseEntity<String> finishPayment(Transaction transaction) {
+        loggerService.debugLog("Sending request to bank microservice in PSP for finishing payment transaction");
         ResponseDto requestForPspApplication = getRequestDtoForPspApplication(transaction);
-
         ResponseEntity<String> pspApplicationResponse = WebClient.builder()
                 .build().post()
                 .uri(environment.getProperty("psp.finish-payment"))
@@ -247,22 +241,22 @@ public class BankAccountServiceImpl implements BankAccountService {
                 .retrieve()
                 .toEntity(String.class)
                 .block();
+        loggerService.successLog(MessageFormat.format("Payment finished by transaction with ID: {0}", transaction.getId()));
         return pspApplicationResponse;
     }
 
 
 
     private ResponseDto getRequestDtoForPspApplication(Transaction transaction) {
-        // get RequestDto when issuer and acquirer are in the SAME bank
-        System.out.println("Creating dto for psp app.........");
+        loggerService.debugLog("Creating body for request");
         ResponseDto dto = new ResponseDto();
         dto.setPaymentId(transaction.getId());
         dto.setMerchantOrderId(transaction.getMerchantOrderId());
         dto.setTransactionStatus(transaction.getStatus().toString());
-        if(transaction.getAcquirerOrderId() == null && transaction.getAcquirerTimestamp() == null){
+        if(transaction.getAcquirerOrderId() == null && transaction.getAcquirerTimestamp() == null) {
             dto.setAcquirerOrderId("");
             dto.setAcquirerTimestamp(null);
-        }else{
+        } else {
             dto.setAcquirerOrderId(transaction.getAcquirerOrderId());
             dto.setAcquirerTimestamp(transaction.getAcquirerTimestamp());
         }
@@ -271,6 +265,7 @@ public class BankAccountServiceImpl implements BankAccountService {
 
 
     private void reserveFunds(BankAccount issuerBankAccount, Double amount) {
+        loggerService.infoLog("Reserving funds by bank account with ID: " + issuerBankAccount.getId());
         Double newReservedFunds = issuerBankAccount.getReservedFunds() + amount;
         issuerBankAccount.setReservedFunds(newReservedFunds);
         Double newAvailableFunds = issuerBankAccount.getAvailableFunds() - amount;
@@ -279,6 +274,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
     private BankAccount findIssuerBankAccountByCreditCardId(Long id) {
+        loggerService.debugLog("Finding bank account by credit card ID: " + id);
         for (BankAccount ba: bankAccountRepository.findAll()) {
             if (ba.getCreditCard().getId() == id) {
                 return ba;
@@ -298,22 +294,22 @@ public class BankAccountServiceImpl implements BankAccountService {
 
 
     private String generateRandomString(int targetStringLength) {
+        loggerService.infoLog(MessageFormat.format("Generating random string with a length of {0} characters", targetStringLength));
         int leftLimit = 97; // letter 'a'
         int rightLimit = 122; // letter 'z'
-        Random random = new Random();
 
+        Random random = new Random();
         String generatedString = random.ints(leftLimit, rightLimit + 1)
                 .limit(targetStringLength)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
-
-        System.out.println(generatedString);
         return generatedString;
     }
 
 
     private PccRequestDto createPccRequest(IssuerRequestDto dto){
         Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
+;       loggerService.infoLog("Creating PCC request");
 
         PccRequestDto pccRequest = new PccRequestDto();
         pccRequest.setAcquirerOrderId(generateRandomString(acquirerOrderId));
@@ -324,9 +320,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         pccRequest.setSuccessURL(transaction.getSuccessURL());
         pccRequest.setFailedURL(transaction.getFailedURL());
         pccRequest.setErrorURL(transaction.getErrorURL());
-        System.out.println("Ovo je email:" + dto.getIssuer());
-        System.out.println("Ovo je naziv banke:" + dto.getBankName());
-
         if(dto.getIssuer() != null && dto.getBankName() != null){
             pccRequest.setQrCodePayment(true);
             pccRequest.setBankName(dto.getBankName());
@@ -344,7 +337,6 @@ public class BankAccountServiceImpl implements BankAccountService {
 
 
     private ResponseEntity<PccResponseDto> sendRequestToPcc(PccRequestDto requestForPccApplication) {
-
         ResponseEntity<PccResponseDto> pccApplicationResponse = WebClient.builder()
                 .build().post()
                 .uri(environment.getProperty("pcc.pcc-request"))
@@ -353,6 +345,9 @@ public class BankAccountServiceImpl implements BankAccountService {
                 .retrieve()
                 .toEntity(PccResponseDto.class)
                 .block();
+        if (pccApplicationResponse.getStatusCode().is2xxSuccessful()) {
+            loggerService.successLog("Successfully received response from PCC");
+        }
         return pccApplicationResponse;
     }
 
@@ -413,7 +408,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         transaction.setStatus(TransactionStatus.SUCCESS);
         transactionService.save(transaction);
 
-
         return createResponseToPcc(transaction);
     }
 
@@ -451,13 +445,12 @@ public class BankAccountServiceImpl implements BankAccountService {
         return  pccResponseDto;
     }
 
-    PccResponseDto createAndSendPccRequest(IssuerRequestDto dto){
+    private PccResponseDto createAndSendPccRequest(IssuerRequestDto dto){
         PccRequestDto pccRequest =  createPccRequest(dto);
         return sendRequestToPcc(pccRequest).getBody();
     }
 
-    Boolean validQrCodePayment(PccRequestDto dto, BankAccount issuerBankAccount){
-
+    private Boolean validQrCodePayment(PccRequestDto dto, BankAccount issuerBankAccount){
         if (issuerBankAccount == null) {
             String msg = "Issuer bank account not found";
             System.out.println(msg);

@@ -1,6 +1,6 @@
 spring:
-  profiles:
-    active: bank2
+#  profiles:
+#    active: bank2
   application:
     name: bank1-service
   main:
@@ -23,7 +23,7 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
-    show-sql: true
+    show-sql: false
 
 
 jwt:
