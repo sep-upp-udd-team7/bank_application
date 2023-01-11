@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
@@ -39,44 +40,14 @@ public class QRCodeServiceImpl implements QRCodeService {
     @Autowired
     TransactionService transactionService;
 
-    @Override
-    public void generateQRCodeImage(String text, int width, int height, String filePath) throws WriterException, IOException {
-        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
-
-        Path path = FileSystems.getDefault().getPath(filePath);
-
-        MatrixToImageWriter.writeToPath(bitMatrix, "PNG", path);
-    }
 
 
-//    public byte[] getQRCodeImage(String text, int width, int height) throws WriterException, IOException {
-//        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-//        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
-//
-//        ByteArrayOutputStream pngOutputStream = new ByteArrayOutputStream();
-//        MatrixToImageConfig con = new MatrixToImageConfig( 0xFF000002 , 0xFFFFC041 ) ;
-//
-//        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream,con);
-//        return pngOutputStream.toByteArray();
-//    }
 
     @Override
     public String qrCodeGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException {
         String filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png").toString();
-        String charset = "UTF-8";
-        Map hintMap = new HashMap();
-        hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
 
-        Map<String, String> qrCodeDataMap = Map.of(
-                "Primalac", dto.getReceiver(),
-                "Cena", dto.getAmount().toString(),
-                "Racun primaoca", dto.getAccountNumber(),
-                "Id transakcije", dto.getIdTransaction()
-        );
-
-        String jsonString = new JSONObject(qrCodeDataMap).toString();
-        createQRCode(jsonString, filePath, charset, hintMap, 500, 500);
+        createQRCode(dto);
 
         BufferedImage image = ImageIO.read(new File(filePath));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -84,27 +55,31 @@ public class QRCodeServiceImpl implements QRCodeService {
         return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 
-    private void createQRCode(String qrCodeData,
-                              String filePath,
-                              String charset,
-                              Map hintMap,
-                              int qrCodeHeight,
-                              int qrCodeWidth) throws WriterException,
-            IOException {
+    @Override
+    public byte[] qrCodeImageGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException {
+        createQRCode(dto);
+        Path filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png");
 
-        BitMatrix matrix = new MultiFormatWriter().encode(
-                new String(qrCodeData.getBytes(charset), charset),
-                BarcodeFormat.QR_CODE,
-                qrCodeWidth,
-                qrCodeHeight,
-                hintMap
-        );
+        return Files.readAllBytes(filePath);
+    }
 
-        MatrixToImageWriter.writeToPath(
-                matrix,
-                filePath.substring(filePath.lastIndexOf('.') + 1),
-                FileSystems.getDefault().getPath(filePath)
+    private void createQRCode(GenerateQRCodeDTO dto) throws WriterException, IOException {
+        String filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png").toString();
+        String charset = "UTF-8";
+        Map hintMap = new HashMap();
+        hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+
+        Map<String, String> qrCodeDataMap = Map.of(
+                "Receiver", dto.getReceiver(),
+                "Amount", dto.getAmount().toString(),
+                "Bank account", dto.getAccountNumber(),
+                "Id transaction", dto.getIdTransaction()
         );
+        String jsonString = new JSONObject(qrCodeDataMap).toString();
+
+        BitMatrix matrix = new MultiFormatWriter().encode(new String(jsonString.getBytes(charset), charset), BarcodeFormat.QR_CODE, 250, 250, hintMap);
+
+        MatrixToImageWriter.writeToPath(matrix, filePath.substring(filePath.lastIndexOf('.') + 1), FileSystems.getDefault().getPath(filePath));
     }
 
 
@@ -118,13 +93,31 @@ public class QRCodeServiceImpl implements QRCodeService {
 
         try {
             Result result = new MultiFormatReader().decode(bitmap);
-            System.out.println("DEKODIRANO" + result);
+            System.out.println("Decoded" + result);
 
             JSONObject json = new JSONObject(result.getText());
-            System.out.println("JSON:" + json);
-            System.out.println("CENA:" + json.getString("Cena"));
 
-            //TODO: provjeriti sva ostala polja i prebrojati ih
+            if(json.length() != 4){
+                return false;
+            }
+
+            //Amount
+            try {
+                double amount = Double.parseDouble(json.getString("Cena"));
+                if(amount < 0){
+                    return false;
+                }
+            } catch (NumberFormatException nfe) {
+                return false;
+            }
+
+            //Receiver bank account
+            try {
+                double bankAccount = Double.parseDouble(json.getString("Racun primaoca"));
+            } catch (NumberFormatException nfe) {
+                return false;
+            }
+            //kod primaoca samo da budu slova i brojevi
 
             return true;
         } catch (NotFoundException e) {
@@ -132,6 +125,7 @@ public class QRCodeServiceImpl implements QRCodeService {
             return false;
         }
     }
+
 
     @Override
     public GenerateQRCodeDTO getQrCodeData(String paymentId) {

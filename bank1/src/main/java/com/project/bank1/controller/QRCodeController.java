@@ -7,14 +7,18 @@ import com.project.bank1.dto.ValidateQRCodeDTO;
 import com.project.bank1.service.interfaces.QRCodeService;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
@@ -26,46 +30,23 @@ public class QRCodeController {
     @Autowired
     QRCodeService qrService;
 
-    private static final String QR_CODE_IMAGE_PATH = "C:\\SEP-UPP-UDD\\bank_application\\bank1\\src\\main\\resources\\QRCode.png";
-
-//    @GetMapping("/getQR")
-//    public String getQRCode(Model model){
-//        String medium="https://rahul26021999.medium.com/";
-//        String github="Cao, POKUSAVAM DA DEKODIRAM OVO";
-//
-//        byte[] image = new byte[0];
-//        try {
-//
-//            // Generate and Return Qr Code in Byte Array
-//            image = qrService.getQRCodeImage(github,250,250);
-//
-//            // Generate and Save Qr Code Image in static/image folder
-//            qrService.generateQRCodeImage(github,250,250,QR_CODE_IMAGE_PATH);
-//
-//        } catch (WriterException | IOException e) {
-//            e.printStackTrace();
-//        }
-//        // Convert Byte Array into Base64 Encode String
-//        String qrcode = Base64.getEncoder().encodeToString(image);
-//
-//        model.addAttribute("medium",medium);
-//        model.addAttribute("github",github);
-//        model.addAttribute("qrcode",qrcode);
-//
-//        System.out.println("MODEL" + model);
-//
-//        return "qrcode";
-//    }
-
     @RequestMapping(method = RequestMethod.POST, value = "/getQRCode")
     public String qrCodeGenerator(@RequestBody GenerateQRCodeDTO dto) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
 
         String qr = qrService.qrCodeGenerator(dto);
-        System.out.println("novi qr:" + qr);
+        System.out.println("Generated qr code:" + qr);
 
-        String decodirano = new String(qr);
-        System.out.println("DEKODIRANO:" + decodirano);
+        String decoded = new String(qr);
+        System.out.println("Decoded:" + decoded);
         return qr;
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/getQRCodeImage")
+    public ResponseEntity<byte[]> qrCodeImageGenerator(@RequestBody GenerateQRCodeDTO dto) throws IOException, WriterException {
+        byte[] imageBytes = qrService.qrCodeImageGenerator(dto);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_JPEG);
+        return new ResponseEntity<byte[]>(imageBytes, headers, HttpStatus.OK);
     }
 
     @GetMapping("/validateQRCode")
