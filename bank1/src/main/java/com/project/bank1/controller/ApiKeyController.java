@@ -1,9 +1,6 @@
 package com.project.bank1.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.project.bank1.dto.ApiKeyDto;
 import com.project.bank1.dto.MerchantCredentialsDto;
-import com.project.bank1.dto.RequestDto;
 import com.project.bank1.service.LoggerService;
 import com.project.bank1.service.interfaces.ApiKeyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +25,7 @@ public class ApiKeyController {
         try {
             return new ResponseEntity<>(apiKeyService.generateApiKey(dto), HttpStatus.OK);
         } catch (Exception exception) {
+            loggerService.errorLog("Generating API key is unsuccessful");
             return new ResponseEntity<>(exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -35,7 +33,13 @@ public class ApiKeyController {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<?> decodeApiKey(@RequestBody String apiKey) {
         System.out.printf(apiKey);
-        return new ResponseEntity<>(HttpStatus.OK);
+        loggerService.infoLog("Decoding API key");
+        try {
+            return new ResponseEntity<>(apiKeyService.decodeApiKey(apiKey), HttpStatus.OK);
+        } catch (Exception e) {
+            loggerService.errorLog("Decoding API key is unsuccessful");
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 }

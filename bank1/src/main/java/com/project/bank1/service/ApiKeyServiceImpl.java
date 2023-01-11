@@ -27,19 +27,21 @@ public class ApiKeyServiceImpl implements ApiKeyService {
             String json = objectMapper.writeValueAsString(getApiKeyDto(dto.getMerchantId(), dto.getBankName()));
             byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
             String apiKey = Base64.getUrlEncoder().encodeToString(bytes);
-            System.out.println(apiKey);
-
-            // decoding
-            byte [] bytesDecoding = Base64.getDecoder().decode(apiKey);
-            String jsonDecoding = new String(bytesDecoding, StandardCharsets.UTF_8);
-            ObjectMapper objectMapperDecoding = new ObjectMapper();
-            ApiKeyDto data = objectMapperDecoding.readValue(jsonDecoding, ApiKeyDto.class);
-            System.out.println("Decoded " + data.getMerchantId() + " " + data.getBankName());
-
+            loggerService.successLog("Generated API key: " + apiKey + " for merchant with ID: " + dto.getMerchantId());
             return apiKey;
         }
         loggerService.warnLog("Invalid merchant credentials entered by merchant with ID: " + dto.getMerchantId() );
         throw new Exception("Invalid merchant credentials");
+    }
+
+    @Override
+    public ApiKeyDto decodeApiKey(String apiKey) throws Exception  {
+        byte [] bytesDecoding = Base64.getDecoder().decode(apiKey);
+        String jsonDecoding = new String(bytesDecoding, StandardCharsets.UTF_8);
+        ObjectMapper objectMapperDecoding = new ObjectMapper();
+        ApiKeyDto data = objectMapperDecoding.readValue(jsonDecoding, ApiKeyDto.class);
+        loggerService.successLog("API key successfully decoded");
+        return data;
     }
 
     private ApiKeyDto getApiKeyDto(String merchantId, String bankName) {
@@ -48,6 +50,4 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         dto.setBankName(bankName);
         return dto;
     }
-
-
 }
