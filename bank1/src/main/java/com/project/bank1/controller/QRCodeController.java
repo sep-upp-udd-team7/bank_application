@@ -31,14 +31,17 @@ public class QRCodeController {
     QRCodeService qrService;
 
     @RequestMapping(method = RequestMethod.POST, value = "/getQRCode")
-    public String qrCodeGenerator(@RequestBody GenerateQRCodeDTO dto) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
+    public ResponseEntity<?> qrCodeGenerator(@RequestBody GenerateQRCodeDTO dto) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
 
         String qr = qrService.qrCodeGenerator(dto);
         System.out.println("Generated qr code:" + qr);
+        if(qr.contains("Qr code generating failed")){
+            return new ResponseEntity<>(qr, HttpStatus.BAD_REQUEST);
+        }
 
         String decoded = new String(qr);
         System.out.println("Decoded:" + decoded);
-        return qr;
+        return new ResponseEntity<>(qr, HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/getQRCodeImage")

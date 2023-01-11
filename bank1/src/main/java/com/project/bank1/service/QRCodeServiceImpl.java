@@ -47,8 +47,8 @@ public class QRCodeServiceImpl implements QRCodeService {
     public String qrCodeGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException {
         String filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png").toString();
 
-        if(!createQRCode(dto)){
-            return null;
+        if(!createQRCode(dto).equals("Success")){
+            return createQRCode(dto);
         }
 
         BufferedImage image = ImageIO.read(new File(filePath));
@@ -59,21 +59,33 @@ public class QRCodeServiceImpl implements QRCodeService {
 
     @Override
     public byte[] qrCodeImageGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException {
-        if(!createQRCode(dto)){
+        if(!createQRCode(dto).equals("Success")){
             return null;
         }
         Path filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png");
         return Files.readAllBytes(filePath);
     }
 
-    private Boolean createQRCode(GenerateQRCodeDTO dto) throws WriterException, IOException {
+    private String createQRCode(GenerateQRCodeDTO dto) throws WriterException, IOException {
         String filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png").toString();
         String charset = "UTF-8";
         Map hintMap = new HashMap();
         hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
 
-        if(dto.getAmount()==null || dto.getReceiver()==null || dto.getAccountNumber() ==null || dto.getIdTransaction()==null){
-            return false;
+        if(dto.getAmount()==null){
+            return "Qr code generating failed: amount field is missing";
+        }
+        if(dto.getReceiver()==null){
+            return "Qr code generating failed: receiver field is missing";
+
+        }
+        if(dto.getAccountNumber() ==null){
+            return "Qr code generating failed: bankAccount field is missing";
+
+        }
+        if(dto.getIdTransaction()==null){
+            return "Qr code generating failed: idTransaction field is missing";
+
         }
 
         Map<String, String> qrCodeDataMap = Map.of(
@@ -86,45 +98,40 @@ public class QRCodeServiceImpl implements QRCodeService {
         String jsonString = new JSONObject(qrCodeDataMap).toString();
 
         if(json.length() != 4){
-            return false;
+            return "Qr code generating failed: json object contains more than 4 key/value pairs!";
         }
         String amount = json.getString("Amount");
         String receiver = json.getString("Receiver");
         String bankAccount = json.getString("Bank account");
         String idTransaction = json.getString("Id transaction");
 
-        if(amount == null || receiver == null || bankAccount == null || idTransaction == null){
-            return false;
-        }
-
         //Amount
         try {
             double a = Double.parseDouble(amount);
             if(a < 0){
-                return false;
+                return "Qr code generating failed: amount is less than 0!";
             }
         } catch (NumberFormatException nfe) {
-            return false;
+            return "Qr code generating failed: amount is not a number!";
         }
 
-        //Receiver bank account
-        try {
-            double ba = Double.parseDouble(bankAccount);
-        } catch (NumberFormatException nfe) {
-            return false;
+        if(!idTransaction.matches("[a-zA-Z0-9]+")){
+            return "Qr code generating failed: Id transaction can only contain letters and numbers!";
         }
 
+        if(!receiver.matches("[a-zA-Z0-9 ]+")){
+            return "Qr code generating failed: Id transaction can only contain letters, numbers and space!";
+        }
 
-        if(!idTransaction.matches("[a-zA-Z0-9]+")
-        || !receiver.matches("[a-zA-Z0-9 ]+")){
-            return false;
+        if(!bankAccount.matches("[0-9]+")){
+            return "Qr code generating failed: bank account number is not a number!";
         }
 
         BitMatrix matrix = new MultiFormatWriter().encode(new String(jsonString.getBytes(charset), charset), BarcodeFormat.QR_CODE, 250, 250, hintMap);
 
         MatrixToImageWriter.writeToPath(matrix, filePath.substring(filePath.lastIndexOf('.') + 1), FileSystems.getDefault().getPath(filePath));
 
-        return true;
+        return "Success";
     }
 
 
@@ -176,7 +183,7 @@ public class QRCodeServiceImpl implements QRCodeService {
     public GenerateQRCodeDTO getQrCodeData(String paymentId) {
         Transaction t = transactionService.findByPaymentId(paymentId.toString());
         GenerateQRCodeDTO qr = new GenerateQRCodeDTO();
-        qr.setAmount(t.getAmount());
+        qr.setAmount(t.getAmount().toString());
         qr.setReceiver(t.getBankAccount().getClient().getName());
         qr.setAccountNumber(t.getBankAccount().getBankAccountNumber());
         qr.setIdTransaction(t.getId());

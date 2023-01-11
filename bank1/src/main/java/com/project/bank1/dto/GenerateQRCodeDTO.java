@@ -10,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GenerateQRCodeDTO {
-    private Double amount;
+    private String amount;
     private String receiver;
     private String accountNumber;
     private String idTransaction;
