@@ -10,7 +10,7 @@ import java.security.spec.InvalidKeySpecException;
 
 public interface QRCodeService {
     void generateQRCodeImage(String text, int width, int height, String filePath) throws WriterException, IOException;
-    byte[] getQRCodeImage(String text, int width, int height) throws WriterException, IOException;
+//    byte[] getQRCodeImage(String text, int width, int height) throws WriterException, IOException;
     String qrCodeGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException;
     Boolean decodeQRCode(String qr) throws IOException;
     GenerateQRCodeDTO getQrCodeData(String paymentId);

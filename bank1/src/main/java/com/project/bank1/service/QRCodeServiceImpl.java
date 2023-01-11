@@ -44,27 +44,26 @@ public class QRCodeServiceImpl implements QRCodeService {
         BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
 
         Path path = FileSystems.getDefault().getPath(filePath);
-        //Path path = Paths.get("C:\\SEP-UPP-UDD\\bank_application\\bank1\\src\\main\\resources");
 
         MatrixToImageWriter.writeToPath(bitMatrix, "PNG", path);
     }
 
 
-    public byte[] getQRCodeImage(String text, int width, int height) throws WriterException, IOException {
-        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
-
-        ByteArrayOutputStream pngOutputStream = new ByteArrayOutputStream();
-        MatrixToImageConfig con = new MatrixToImageConfig( 0xFF000002 , 0xFFFFC041 ) ;
-
-        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream,con);
-        return pngOutputStream.toByteArray();
-    }
+//    public byte[] getQRCodeImage(String text, int width, int height) throws WriterException, IOException {
+//        QRCodeWriter qrCodeWriter = new QRCodeWriter();
+//        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
+//
+//        ByteArrayOutputStream pngOutputStream = new ByteArrayOutputStream();
+//        MatrixToImageConfig con = new MatrixToImageConfig( 0xFF000002 , 0xFFFFC041 ) ;
+//
+//        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream,con);
+//        return pngOutputStream.toByteArray();
+//    }
 
     @Override
     public String qrCodeGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException {
 
-        String filePath = "C:\\SEP-UPP-UDD\\bank_application\\bank1\\src\\main\\resources\\qr.png";
+        String filePath = "src/main/resources/qr.png";
         String charset = "UTF-8";
         Map hintMap = new HashMap();
         hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
