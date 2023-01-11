@@ -10,4 +10,6 @@ public class IssuerRequestDto {
     private String yy;
     private String cvv;
     private String paymentId;
+    private String issuer;
+    private String bankName;
 }

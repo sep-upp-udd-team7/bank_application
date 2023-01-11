@@ -1,6 +1,8 @@
 spring:
   application:
     name: bank2-service
+  main:
+    allow-circular-references: true
   datasource:
     driverClassName: org.postgresql.Driver
     initialization-mode: always
@@ -19,11 +21,25 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
-    show-sql: false
+    show-sql: true
+
+
 jwt:
   secret: security
 
 server:
-  port: 8091
+  port: 8099
   servlet:
     context-path: /bank2
+
+bank:
+  pan: 987654
+  frontend:
+    url: 'http://localhost:3000/'
+    credit-card-data-module: 'credit-card'
+
+psp:
+  finish-payment: 'http://localhost:8000/bank-service/credit-cards/finishPayment'
+
+pcc:
+  pcc-request: 'http://localhost:8092/pcc/request/validateAndRedirect'

@@ -10,8 +10,11 @@ import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.project.bank1.dto.GenerateQRCodeDTO;
+import com.project.bank1.model.Transaction;
 import com.project.bank1.service.interfaces.QRCodeService;
+import com.project.bank1.service.interfaces.TransactionService;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -22,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
@@ -32,33 +36,34 @@ import java.util.Map;
 @Service
 public class QRCodeServiceImpl implements QRCodeService {
 
+    @Autowired
+    TransactionService transactionService;
+
     @Override
     public void generateQRCodeImage(String text, int width, int height, String filePath) throws WriterException, IOException {
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
         BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
 
         Path path = FileSystems.getDefault().getPath(filePath);
-        //Path path = Paths.get("C:\\SEP-UPP-UDD\\bank_application\\bank1\\src\\main\\resources");
 
         MatrixToImageWriter.writeToPath(bitMatrix, "PNG", path);
     }
 
 
-    public byte[] getQRCodeImage(String text, int width, int height) throws WriterException, IOException {
-        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
-
-        ByteArrayOutputStream pngOutputStream = new ByteArrayOutputStream();
-        MatrixToImageConfig con = new MatrixToImageConfig( 0xFF000002 , 0xFFFFC041 ) ;
-
-        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream,con);
-        return pngOutputStream.toByteArray();
-    }
+//    public byte[] getQRCodeImage(String text, int width, int height) throws WriterException, IOException {
+//        QRCodeWriter qrCodeWriter = new QRCodeWriter();
+//        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
+//
+//        ByteArrayOutputStream pngOutputStream = new ByteArrayOutputStream();
+//        MatrixToImageConfig con = new MatrixToImageConfig( 0xFF000002 , 0xFFFFC041 ) ;
+//
+//        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream,con);
+//        return pngOutputStream.toByteArray();
+//    }
 
     @Override
     public String qrCodeGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException {
-
-        String filePath = "C:\\SEP-UPP-UDD\\bank_application\\bank1\\src\\main\\resources\\qr.png";
+        String filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png").toString();
         String charset = "UTF-8";
         Map hintMap = new HashMap();
         hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
@@ -126,6 +131,17 @@ public class QRCodeServiceImpl implements QRCodeService {
             System.out.println("There is no QR code in the image");
             return false;
         }
+    }
+
+    @Override
+    public GenerateQRCodeDTO getQrCodeData(String paymentId) {
+        Transaction t = transactionService.findByPaymentId(paymentId.toString());
+        GenerateQRCodeDTO qr = new GenerateQRCodeDTO();
+        qr.setAmount(t.getAmount());
+        qr.setReceiver(t.getBankAccount().getClient().getName());
+        qr.setAccountNumber(t.getBankAccount().getBankAccountNumber());
+        qr.setIdTransaction(t.getId());
+        return qr;
     }
 
 }

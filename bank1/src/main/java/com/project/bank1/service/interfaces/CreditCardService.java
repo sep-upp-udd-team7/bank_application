@@ -7,4 +7,6 @@ public interface CreditCardService {
     CreditCard addCreditCard(String clientsName);
 
     CreditCard validateIssuerCreditCard(IssuerRequestDto dto);
+
+    CreditCard findByPan(String pan);
 }

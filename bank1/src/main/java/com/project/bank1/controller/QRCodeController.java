@@ -28,37 +28,36 @@ public class QRCodeController {
 
     private static final String QR_CODE_IMAGE_PATH = "C:\\SEP-UPP-UDD\\bank_application\\bank1\\src\\main\\resources\\QRCode.png";
 
-    @GetMapping("/getQR")
-    public String getQRCode(Model model){
-        String medium="https://rahul26021999.medium.com/";
-        String github="Cao, POKUSAVAM DA DEKODIRAM OVO";
+//    @GetMapping("/getQR")
+//    public String getQRCode(Model model){
+//        String medium="https://rahul26021999.medium.com/";
+//        String github="Cao, POKUSAVAM DA DEKODIRAM OVO";
+//
+//        byte[] image = new byte[0];
+//        try {
+//
+//            // Generate and Return Qr Code in Byte Array
+//            image = qrService.getQRCodeImage(github,250,250);
+//
+//            // Generate and Save Qr Code Image in static/image folder
+//            qrService.generateQRCodeImage(github,250,250,QR_CODE_IMAGE_PATH);
+//
+//        } catch (WriterException | IOException e) {
+//            e.printStackTrace();
+//        }
+//        // Convert Byte Array into Base64 Encode String
+//        String qrcode = Base64.getEncoder().encodeToString(image);
+//
+//        model.addAttribute("medium",medium);
+//        model.addAttribute("github",github);
+//        model.addAttribute("qrcode",qrcode);
+//
+//        System.out.println("MODEL" + model);
+//
+//        return "qrcode";
+//    }
 
-        byte[] image = new byte[0];
-        try {
-
-            // Generate and Return Qr Code in Byte Array
-            image = qrService.getQRCodeImage(github,250,250);
-
-            // Generate and Save Qr Code Image in static/image folder
-            qrService.generateQRCodeImage(github,250,250,QR_CODE_IMAGE_PATH);
-
-        } catch (WriterException | IOException e) {
-            e.printStackTrace();
-        }
-        // Convert Byte Array into Base64 Encode String
-        String qrcode = Base64.getEncoder().encodeToString(image);
-
-        model.addAttribute("medium",medium);
-        model.addAttribute("github",github);
-        model.addAttribute("qrcode",qrcode);
-
-        System.out.println("MODEL" + model);
-
-        return "qrcode";
-    }
-
-
-    @GetMapping("/getQRCode")
+    @RequestMapping(method = RequestMethod.POST, value = "/getQRCode")
     public String qrCodeGenerator(@RequestBody GenerateQRCodeDTO dto) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
 
         String qr = qrService.qrCodeGenerator(dto);
@@ -66,7 +65,7 @@ public class QRCodeController {
 
         String decodirano = new String(qr);
         System.out.println("DEKODIRANO:" + decodirano);
-        return "qrcode";
+        return qr;
     }
 
     @GetMapping("/validateQRCode")
@@ -85,6 +84,16 @@ public class QRCodeController {
             System.out.println("Could not decode QR Code, IOException :: " + e.getMessage());
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+    @GetMapping("/getQrCodeData/{paymentId}")
+    public ResponseEntity<?> getQrCodeData(@PathVariable String paymentId){
+        GenerateQRCodeDTO qr = qrService.getQrCodeData(paymentId);
+        if(qr == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<>(qr, HttpStatus.OK);
     }
 
 }

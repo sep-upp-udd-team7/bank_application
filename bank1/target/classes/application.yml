@@ -1,4 +1,6 @@
 spring:
+#  profiles:
+#    active: bank2
   application:
     name: bank1-service
   main:
@@ -21,7 +23,7 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
-    show-sql: true
+    show-sql: false
 
 
 jwt:
@@ -33,10 +35,15 @@ server:
     context-path: /bank1
 
 bank:
+  name: 'Bank 1'
   pan: 525150
   frontend:
     url: 'http://localhost:3000/'
     credit-card-data-module: 'credit-card'
+    qr-code: 'qr-code'
 
 psp:
   finish-payment: 'http://localhost:8000/bank-service/credit-cards/finishPayment'
+
+pcc:
+  pcc-request: 'http://localhost:8092/pcc/request/validateAndRedirect'
