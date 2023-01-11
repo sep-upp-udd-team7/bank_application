@@ -47,7 +47,9 @@ public class QRCodeServiceImpl implements QRCodeService {
     public String qrCodeGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException {
         String filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png").toString();
 
-        createQRCode(dto);
+        if(!createQRCode(dto)){
+            return null;
+        }
 
         BufferedImage image = ImageIO.read(new File(filePath));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -57,17 +59,22 @@ public class QRCodeServiceImpl implements QRCodeService {
 
     @Override
     public byte[] qrCodeImageGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException {
-        createQRCode(dto);
+        if(!createQRCode(dto)){
+            return null;
+        }
         Path filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png");
-
         return Files.readAllBytes(filePath);
     }
 
-    private void createQRCode(GenerateQRCodeDTO dto) throws WriterException, IOException {
+    private Boolean createQRCode(GenerateQRCodeDTO dto) throws WriterException, IOException {
         String filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png").toString();
         String charset = "UTF-8";
         Map hintMap = new HashMap();
         hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+
+        if(dto.getAmount()==null || dto.getReceiver()==null || dto.getAccountNumber() ==null || dto.getIdTransaction()==null){
+            return false;
+        }
 
         Map<String, String> qrCodeDataMap = Map.of(
                 "Receiver", dto.getReceiver(),
@@ -75,11 +82,49 @@ public class QRCodeServiceImpl implements QRCodeService {
                 "Bank account", dto.getAccountNumber(),
                 "Id transaction", dto.getIdTransaction()
         );
+        JSONObject json = new JSONObject(qrCodeDataMap);
         String jsonString = new JSONObject(qrCodeDataMap).toString();
+
+        if(json.length() != 4){
+            return false;
+        }
+        String amount = json.getString("Amount");
+        String receiver = json.getString("Receiver");
+        String bankAccount = json.getString("Bank account");
+        String idTransaction = json.getString("Id transaction");
+
+        if(amount == null || receiver == null || bankAccount == null || idTransaction == null){
+            return false;
+        }
+
+        //Amount
+        try {
+            double a = Double.parseDouble(amount);
+            if(a < 0){
+                return false;
+            }
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+
+        //Receiver bank account
+        try {
+            double ba = Double.parseDouble(bankAccount);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+
+
+        if(!idTransaction.matches("[a-zA-Z0-9]+")
+        || !receiver.matches("[a-zA-Z0-9 ]+")){
+            return false;
+        }
 
         BitMatrix matrix = new MultiFormatWriter().encode(new String(jsonString.getBytes(charset), charset), BarcodeFormat.QR_CODE, 250, 250, hintMap);
 
         MatrixToImageWriter.writeToPath(matrix, filePath.substring(filePath.lastIndexOf('.') + 1), FileSystems.getDefault().getPath(filePath));
+
+        return true;
     }
 
 
@@ -103,7 +148,7 @@ public class QRCodeServiceImpl implements QRCodeService {
 
             //Amount
             try {
-                double amount = Double.parseDouble(json.getString("Cena"));
+                double amount = Double.parseDouble(json.getString("Amount"));
                 if(amount < 0){
                     return false;
                 }
@@ -113,7 +158,7 @@ public class QRCodeServiceImpl implements QRCodeService {
 
             //Receiver bank account
             try {
-                double bankAccount = Double.parseDouble(json.getString("Racun primaoca"));
+                double bankAccount = Double.parseDouble(json.getString("Bank account"));
             } catch (NumberFormatException nfe) {
                 return false;
             }

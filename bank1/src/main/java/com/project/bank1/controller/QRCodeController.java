@@ -42,8 +42,11 @@ public class QRCodeController {
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/getQRCodeImage")
-    public ResponseEntity<byte[]> qrCodeImageGenerator(@RequestBody GenerateQRCodeDTO dto) throws IOException, WriterException {
+    public ResponseEntity<?> qrCodeImageGenerator(@RequestBody GenerateQRCodeDTO dto) throws IOException, WriterException {
         byte[] imageBytes = qrService.qrCodeImageGenerator(dto);
+        if(imageBytes == null){
+            return new ResponseEntity<>("Validation failed, qr code was not generated!!",HttpStatus.BAD_REQUEST);
+        }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
         return new ResponseEntity<byte[]>(imageBytes, headers, HttpStatus.OK);
