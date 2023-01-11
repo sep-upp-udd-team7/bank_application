@@ -61,8 +61,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                     }
                 }
             } else {
+                // TODO SD: PROVERITI!!!
                 // onda preko API key-a
-
                 String apiKeyToken = tokenUtils.getApiKey(request);
                 if (apiKeyToken != null) {
                     ApiKeyDto apiKeyDto = tokenUtils.decodeApiKey(apiKeyToken);
