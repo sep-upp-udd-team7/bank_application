@@ -1,5 +1,8 @@
 package com.project.bank1.security.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.bank1.dto.ApiKeyDto;
 import com.project.bank1.model.Client;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -10,6 +13,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
@@ -29,6 +34,10 @@ public class TokenUtils {
     // Naziv headera kroz koji ce se prosledjivati JWT u komunikaciji server-klijent
     @Value("Authorization")
     private String AUTH_HEADER;
+
+    // Naziv headera kroz koji ce se prosledjivati JWT u komunikaciji server-klijent
+    @Value("ApiKey")
+    private String API_KEY;
 
     // Moguce je generisati JWT za razlicite klijente (npr. web i mobilni klijenti nece imati isto trajanje JWT,
     // JWT za mobilne klijente ce trajati duze jer se mozda aplikacija redje koristi na taj nacin)
@@ -60,8 +69,6 @@ public class TokenUtils {
                 .setIssuedAt(new Date())
                 .setExpiration(generateExpirationDate())
                 .signWith(SIGNATURE_ALGORITHM, SECRET).compact();
-
-
         // moguce je postavljanje proizvoljnih podataka u telo JWT tokena pozivom funkcije .claim("key", value), npr. .claim("role", user.getRole())
     }
 
@@ -274,5 +281,30 @@ public class TokenUtils {
      */
     public String getAuthHeaderFromHeader(HttpServletRequest request) {
         return request.getHeader(AUTH_HEADER);
+    }
+
+    public String getApiKeyFromHeader(HttpServletRequest request) {
+        return request.getHeader(API_KEY);
+    }
+
+    public ApiKeyDto decodeApiKey(String apiKey) throws JsonProcessingException {
+        byte [] bytesDecoding = Base64.getDecoder().decode(apiKey);
+        String jsonDecoding = new String(bytesDecoding, StandardCharsets.UTF_8);
+        ObjectMapper objectMapperDecoding = new ObjectMapper();
+        ApiKeyDto data = objectMapperDecoding.readValue(jsonDecoding, ApiKeyDto.class);
+        return data;
+    }
+
+    public String getApiKey(HttpServletRequest request) {
+        String apiKeyHead = getApiKeyFromHeader(request);
+
+        // JWT se prosledjuje kroz header 'ApiKey' u formatu:
+        // Bearer eyJtZXJjaGFudElkIjoiZWhmb2J5dW14ZmlzZGh3b3Rua2J5emhlYWlpeWx2IiwiYmFua05hbWUiOiJCYW5rIDEifQ==
+
+        if (apiKeyHead != null && apiKeyHead.startsWith("Bearer ")) {
+            return apiKeyHead.substring(7); // preuzimamo samo token (vrednost tokena je nakon "Bearer " prefiksa)
+        }
+
+        return null;
     }
 }

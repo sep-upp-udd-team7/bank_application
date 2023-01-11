@@ -58,6 +58,9 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 }
+            } else {
+                // ona auth preko API key-a
+
             }
 
         } catch (ExpiredJwtException ex) {

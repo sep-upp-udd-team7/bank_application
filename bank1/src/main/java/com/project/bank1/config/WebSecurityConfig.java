@@ -59,7 +59,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests().antMatchers("**/auth/**").permitAll()
                 .antMatchers("**/getAll/**").permitAll()
                 .antMatchers("**/pay**").permitAll()
-                .antMatchers("**/api-keys**").permitAll()
+                .antMatchers("**/generate**").permitAll()
                 .antMatchers("**/registration").permitAll()
                 .antMatchers("**/getQR").permitAll()
                 .antMatchers("**/getQRCode").permitAll()
@@ -86,7 +86,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         web.ignoring().antMatchers(HttpMethod.POST, "/**/auth/**");
         web.ignoring().antMatchers(HttpMethod.POST, "/**/registration");
-        web.ignoring().antMatchers(HttpMethod.POST, "/**/api-keys/**");
+        web.ignoring().antMatchers(HttpMethod.POST, "/**/generate");
         web.ignoring().antMatchers(HttpMethod.POST, "/**/login");
         web.ignoring().antMatchers(HttpMethod.POST, "/**/pay");
         web.ignoring().antMatchers(HttpMethod.POST, "/**/validateAcquirer");

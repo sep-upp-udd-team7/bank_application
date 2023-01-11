@@ -24,4 +24,18 @@ public class CustomClientDetailsService implements UserDetailsService {
             return user;
         }
     }
+
+    public Client isMerchantIdCorrect(String merchantId) {
+        Client client = null;
+        for (Client c: clientRepository.findAll()) {
+            if (c.getMerchantId() != null && c.getMerchantId().equals(merchantId)) {
+                client = c;
+            }
+        }
+        if (client == null) {
+            throw new UsernameNotFoundException(MessageFormat.format("No client found with merchant ID: '%s'.", merchantId));
+        } else {
+            return client;
+        }
+    }
 }

@@ -32,7 +32,7 @@ public class ApiKeyController {
 
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<?> decodeApiKey(@RequestBody String apiKey) {
-        System.out.printf(apiKey);
+        // TODO SD: ovaj endpoint treba obrisati, svrha je testiranje
         loggerService.infoLog("Decoding API key");
         try {
             return new ResponseEntity<>(apiKeyService.decodeApiKey(apiKey), HttpStatus.OK);
