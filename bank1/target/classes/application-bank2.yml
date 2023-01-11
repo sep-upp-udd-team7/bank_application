@@ -33,6 +33,7 @@ server:
     context-path: /bank2
 
 bank:
+  name: 'Bank 2'
   pan: 987654
   frontend:
     url: 'http://localhost:5000/'

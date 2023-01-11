@@ -1,6 +1,6 @@
 spring:
-#  profiles:
-#    active: bank2
+  profiles:
+    active: bank2
   application:
     name: bank1-service
   main:
@@ -35,6 +35,7 @@ server:
     context-path: /bank1
 
 bank:
+  name: 'Bank 1'
   pan: 525150
   frontend:
     url: 'http://localhost:3000/'

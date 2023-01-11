@@ -108,9 +108,11 @@ public class BankAccountServiceImpl implements BankAccountService {
     public BankAccount findBankAccountByMerchantId(String merchantId) {
         loggerService.infoLog(MessageFormat.format("Finding bank account by merchant ID: {0}", merchantId));
         for (BankAccount ba: bankAccountRepository.findAll()) {
-            if (ba.getClient().getMerchantId().equals(merchantId)) {
-                loggerService.successLog(MessageFormat.format("Found bank account with ID: {0}", ba.getId()));
-                return ba;
+            if (ba.getClient().getMerchantId() != null) {
+                if (ba.getClient().getMerchantId().equals(merchantId)) {
+                    loggerService.successLog(MessageFormat.format("Found bank account with ID: {0}", ba.getId()));
+                    return ba;
+                }
             }
         }
         loggerService.warnLog(MessageFormat.format("Bank account not found by merchant ID: {0}", merchantId));
@@ -124,7 +126,7 @@ public class BankAccountServiceImpl implements BankAccountService {
             loggerService.debugLog("QR code payment option is selected");
             Client c = clientService.getByEmail(dto.getIssuer());
 
-            if (c != null) { // kupac i prodavac su u istoj banci
+            if (c != null && environment.getProperty("bank.name").equals(dto.getBankName())) {
                 loggerService.debugLog("Issuer and acquirer are in the same bank");
                 dto.setCardHolderName(c.getName());
                 dto.setPan(c.getBankAccount().getCreditCard().getPan());
