@@ -16,5 +16,4 @@ public interface BankAccountService {
     PccResponseDto issuerPaymentDifferentBanks(PccRequestDto dto);
 
     BankAccount findBankAccountByCreditCardId(Long creditCardId);
-
 }

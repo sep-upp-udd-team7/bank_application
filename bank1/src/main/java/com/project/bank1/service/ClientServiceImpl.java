@@ -141,7 +141,7 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public boolean validateMerchantData(String merchantId, String merchantPassword) {
-        loggerService.infoLog(MessageFormat.format("Validation merchant credentials with merchant ID: {0} and merchant password", merchantId));
+        loggerService.infoLog(MessageFormat.format("Validation merchant credentials by merchant ID: {0} and merchant password", merchantId));
         Client client = clientRepository.findByMerchantId(merchantId);
         if (client == null) {
             loggerService.errorLog("Client is not found or client is not registered as company");
@@ -170,6 +170,5 @@ public class ClientServiceImpl implements ClientService {
     public Client getByEmail(String email) {
         return clientRepository.findByEmail(email);
     }
-
 
 }
