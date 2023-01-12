@@ -36,7 +36,7 @@ public class TokenUtils {
     private String AUTH_HEADER;
 
     // Naziv headera kroz koji ce se prosledjivati JWT u komunikaciji server-klijent
-    @Value("ApiKey")
+    @Value("Connection")
     private String API_KEY;
 
     // Moguce je generisati JWT za razlicite klijente (npr. web i mobilni klijenti nece imati isto trajanje JWT,
@@ -298,7 +298,7 @@ public class TokenUtils {
     public String getApiKey(HttpServletRequest request) {
         String apiKeyHead = getApiKeyFromHeader(request);
 
-        // JWT se prosledjuje kroz header 'ApiKey' u formatu:
+        // JWT se prosledjuje kroz header 'Connection' u formatu:
         // Bearer eyJtZXJjaGFudElkIjoiZWhmb2J5dW14ZmlzZGh3b3Rua2J5emhlYWlpeWx2IiwiYmFua05hbWUiOiJCYW5rIDEifQ==
 
         if (apiKeyHead != null && apiKeyHead.startsWith("Bearer ")) {

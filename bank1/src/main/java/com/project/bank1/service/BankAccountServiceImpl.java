@@ -243,7 +243,7 @@ public class BankAccountServiceImpl implements BankAccountService {
                 .retrieve()
                 .toEntity(String.class)
                 .block();
-        loggerService.successLog(MessageFormat.format("Payment finished by transaction with ID: {0}", transaction.getId()));
+        loggerService.successLog(MessageFormat.format("Payment finished by transaction with ID: {0}, redirection to: {1}", transaction.getId(), pspApplicationResponse));
         return pspApplicationResponse;
     }
 
