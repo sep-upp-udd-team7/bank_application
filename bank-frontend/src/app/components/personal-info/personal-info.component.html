@@ -1,4 +1,4 @@
-<div>
+<div *ngIf="client">
     <h1>Welcome {{client.name}}</h1><br>
     <div [hidden]="!isCompany">   
         <!-- <button *ngIf="client?.merchantId" mat-raised-button color="primary" (click)="generateAPIKey()" style="display: flex; justify-content: center; margin: auto; margin-bottom: 50px; padding: 10px;">Generate API key</button> -->

@@ -14,15 +14,25 @@ h4 {
 }
 
 .example-form-field1 {
-    width: 1050px;
+    width: 1100px;
     justify-content: center;
     display: block;
 }
 
 .example-form-field {
-    width: 950px;
+    width: 1000px;
     margin: auto;
     display: flex;
     justify-content: center;
 }
   
+.mat-form-field {
+    width: 400px;
+}
+
+.mat-form-field-appearance-fill.mat-form-field-disabled {
+    width: 400px;
+}
+.mat-form-field-flex {
+    width: 400px;
+}

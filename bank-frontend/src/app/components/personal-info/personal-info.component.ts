@@ -12,10 +12,14 @@ export class PersonalInfoComponent implements OnInit {
   constructor(private authService: AuthService) { }
   client: Client;
   isCompany: boolean;
+  pan: string = '';
 
   ngOnInit(): void {
     this.authService.getLoggedUser().subscribe(data => {
       this.client = data
+      this.pan = this.client.bankAccount.creditCard.pan;
+      let tempPan = this.pan.substring(0, 4) + "xxxxxxxxxxxx"
+      this.client.bankAccount.creditCard.pan = tempPan;
       if (this.client.merchantId != "") {
         this.isCompany = true;
       } else {
@@ -24,10 +28,6 @@ export class PersonalInfoComponent implements OnInit {
       console.log(data)
     })
 
-  }
-
-  generateAPIKey() {
-    alert('TODO')
   }
 
 }
