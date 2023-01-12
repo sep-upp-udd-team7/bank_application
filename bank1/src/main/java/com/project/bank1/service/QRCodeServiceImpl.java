@@ -72,20 +72,8 @@ public class QRCodeServiceImpl implements QRCodeService {
         Map hintMap = new HashMap();
         hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
 
-        if(dto.getAmount()==null){
-            return "Qr code generating failed: amount field is missing";
-        }
-        if(dto.getReceiver()==null){
-            return "Qr code generating failed: receiver field is missing";
-
-        }
-        if(dto.getAccountNumber() ==null){
-            return "Qr code generating failed: bankAccount field is missing";
-
-        }
-        if(dto.getIdTransaction()==null){
-            return "Qr code generating failed: idTransaction field is missing";
-
+        if(validateDto(dto).equals("Success")){
+            return validateDto(dto);
         }
 
         Map<String, String> qrCodeDataMap = Map.of(
@@ -97,34 +85,8 @@ public class QRCodeServiceImpl implements QRCodeService {
         JSONObject json = new JSONObject(qrCodeDataMap);
         String jsonString = new JSONObject(qrCodeDataMap).toString();
 
-        if(json.length() != 4){
-            return "Qr code generating failed: json object contains more than 4 key/value pairs!";
-        }
-        String amount = json.getString("Amount");
-        String receiver = json.getString("Receiver");
-        String bankAccount = json.getString("Bank account");
-        String idTransaction = json.getString("Id transaction");
-
-        //Amount
-        try {
-            double a = Double.parseDouble(amount);
-            if(a < 0){
-                return "Qr code generating failed: amount is less than 0!";
-            }
-        } catch (NumberFormatException nfe) {
-            return "Qr code generating failed: amount is not a number!";
-        }
-
-        if(!idTransaction.matches("[a-zA-Z0-9]+")){
-            return "Qr code generating failed: Id transaction can only contain letters and numbers!";
-        }
-
-        if(!receiver.matches("[a-zA-Z0-9 ]+")){
-            return "Qr code generating failed: Id transaction can only contain letters, numbers and space!";
-        }
-
-        if(!bankAccount.matches("[0-9]+")){
-            return "Qr code generating failed: bank account number is not a number!";
+        if(!validateJson(json).equals("Success")){
+            return validateJson(json);
         }
 
         BitMatrix matrix = new MultiFormatWriter().encode(new String(jsonString.getBytes(charset), charset), BarcodeFormat.QR_CODE, 250, 250, hintMap);
@@ -134,10 +96,70 @@ public class QRCodeServiceImpl implements QRCodeService {
         return "Success";
     }
 
+    private String validateJson(JSONObject json){
+        if(json.length() != 4){
+            return "Qr code failed: json object contains more than 4 key/value pairs!";
+        }
+
+        String amount = json.getString("Amount");
+        String receiver = json.getString("Receiver");
+        String bankAccount = json.getString("Bank account");
+        String idTransaction = json.getString("Id transaction");
+
+        //Amount
+        try {
+            double a = Double.parseDouble(amount);
+            if(a < 0){
+                return "Qr code failed: amount is less than 0!";
+            }
+        } catch (NumberFormatException nfe) {
+            return "Qr code failed: amount is not a number!";
+        }
+
+        if(!idTransaction.matches("[a-zA-Z0-9]+")){
+            return "Qr code failed: Id transaction can only contain letters and numbers!";
+        }
+
+        if(!receiver.matches("[a-zA-Z0-9 ]+")){
+            return "Qr code failed: Id transaction can only contain letters, numbers and space!";
+        }
+
+        if(!bankAccount.matches("[0-9]+")){
+            return "Qr code failed: bank account number is not a number!";
+        }
+
+        return "Success";
+    }
+
+    private String validateDto(GenerateQRCodeDTO dto){
+        if(dto.getAmount()==null){
+            return "Qr code failed: amount field is missing";
+        }
+        if(dto.getReceiver()==null){
+            return "Qr code failed: receiver field is missing";
+
+        }
+        if(dto.getAccountNumber() ==null){
+            return "Qr code failed: bankAccount field is missing";
+
+        }
+        if(dto.getIdTransaction()==null){
+            return "Qr code failed: idTransaction field is missing";
+
+        }
+        return "Success";
+    }
 
     @Override
-    public Boolean decodeQRCode(String qr) throws IOException {
-        byte[] decodedBytes = Base64.getMimeDecoder().decode(qr);
+    public String decodeQRCode(String qr) throws IOException, IllegalArgumentException {
+        byte[] decodedBytes = null;
+        try{
+            decodedBytes = Base64.getMimeDecoder().decode(qr);
+
+        }catch (IllegalArgumentException e) {
+            System.out.println("There is no QR code in the image");
+            return "Qr code failed: There is no QR code in the image";
+        }
         BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(decodedBytes));
 
         LuminanceSource source = new BufferedImageLuminanceSource(bufferedImage);
@@ -149,32 +171,14 @@ public class QRCodeServiceImpl implements QRCodeService {
 
             JSONObject json = new JSONObject(result.getText());
 
-            if(json.length() != 4){
-                return false;
+            if(!validateJson(json).equals("Success")){
+                return validateJson(json);
             }
 
-            //Amount
-            try {
-                double amount = Double.parseDouble(json.getString("Amount"));
-                if(amount < 0){
-                    return false;
-                }
-            } catch (NumberFormatException nfe) {
-                return false;
-            }
-
-            //Receiver bank account
-            try {
-                double bankAccount = Double.parseDouble(json.getString("Bank account"));
-            } catch (NumberFormatException nfe) {
-                return false;
-            }
-            //kod primaoca samo da budu slova i brojevi
-
-            return true;
+            return "Success";
         } catch (NotFoundException e) {
             System.out.println("There is no QR code in the image");
-            return false;
+            return "Qr code failed: There is no QR code in the image";
         }
     }
 

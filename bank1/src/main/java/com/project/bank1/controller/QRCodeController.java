@@ -35,7 +35,7 @@ public class QRCodeController {
 
         String qr = qrService.qrCodeGenerator(dto);
         System.out.println("Generated qr code:" + qr);
-        if(qr.contains("Qr code generating failed")){
+        if(qr.contains("Qr code failed")){
             return new ResponseEntity<>(qr, HttpStatus.BAD_REQUEST);
         }
 
@@ -56,21 +56,23 @@ public class QRCodeController {
     }
 
     @GetMapping("/validateQRCode")
-    public ResponseEntity<?> validateQRCode(@RequestBody ValidateQRCodeDTO qr) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, WriterException {
+    public ResponseEntity<?> validateQRCode(@RequestBody ValidateQRCodeDTO qr) {
 
         try {
-            Boolean decodedText = qrService.decodeQRCode(qr.getQr());
+            String decodedText = qrService.decodeQRCode(qr.getQr());
 
-            if(!decodedText) {
+            if(decodedText.contains("Qr code failed")) {
                 System.out.println("No QR Code found in the image");
-                return new ResponseEntity<>(false, HttpStatus.OK);
+                return new ResponseEntity<>(decodedText, HttpStatus.BAD_REQUEST);
             } else {
-                return new ResponseEntity<>(true, HttpStatus.OK);
+                return new ResponseEntity<>("Qr code is valid!", HttpStatus.OK);
             }
         } catch (IOException e) {
-            System.out.println("Could not decode QR Code, IOException :: " + e.getMessage());
+            String msg = "Could not decode QR Code, IOException ::"  + e.getMessage();
+            System.out.println(msg);
+            return new ResponseEntity<>(msg, HttpStatus.BAD_REQUEST);
+
         }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @GetMapping("/getQrCodeData/{paymentId}")

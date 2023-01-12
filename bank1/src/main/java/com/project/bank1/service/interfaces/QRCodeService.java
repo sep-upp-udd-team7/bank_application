@@ -11,7 +11,7 @@ import java.security.spec.InvalidKeySpecException;
 
 public interface QRCodeService {
     String qrCodeGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException;
-    Boolean decodeQRCode(String qr) throws IOException;
+    String decodeQRCode(String qr) throws IOException;
     GenerateQRCodeDTO getQrCodeData(String paymentId);
     byte[] qrCodeImageGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException;
 }
