@@ -1,7 +1,7 @@
 <div>
-    <h1>Welcome {{client?.name}}</h1><br>
+    <h1>Welcome {{client.name}}</h1><br>
     <div [hidden]="!isCompany">   
-        <button *ngIf="client?.merchantId" mat-raised-button color="primary" (click)="generateAPIKey()" style="display: flex; justify-content: center; margin: auto; margin-bottom: 50px; padding: 10px;">Generate API key</button>
+        <!-- <button *ngIf="client?.merchantId" mat-raised-button color="primary" (click)="generateAPIKey()" style="display: flex; justify-content: center; margin: auto; margin-bottom: 50px; padding: 10px;">Generate API key</button> -->
         <mat-form-field class="example-form-field1" appearance="fill" style="justify-content: center; margin: auto">
             <mat-label>Merchant ID</mat-label>
             <input matInput type="text" [(ngModel)]="client.merchantId" disabled>
