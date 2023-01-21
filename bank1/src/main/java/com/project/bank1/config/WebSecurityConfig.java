@@ -98,7 +98,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         web.ignoring().antMatchers(HttpMethod.GET, "/**/getAll/**");
         web.ignoring().antMatchers(HttpMethod.POST, "/**/getQRCode");
         web.ignoring().antMatchers(HttpMethod.POST, "/**/getQRCodeImage");
-        web.ignoring().antMatchers(HttpMethod.GET, "/**/validateQRCode");
+        web.ignoring().antMatchers(HttpMethod.POST, "/**/validateQRCode");
         web.ignoring().antMatchers(HttpMethod.GET, "/**/getQrCodeData/**");
         web.ignoring().antMatchers(HttpMethod.GET, "**/h2-console/**");
 

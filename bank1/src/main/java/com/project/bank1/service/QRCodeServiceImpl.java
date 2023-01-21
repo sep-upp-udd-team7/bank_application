@@ -47,10 +47,12 @@ public class QRCodeServiceImpl implements QRCodeService {
     public String qrCodeGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException {
         String filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png").toString();
 
+        System.out.println("grCodeGenerator Service.....");
         if(!createQRCode(dto).equals("Success")){
             return createQRCode(dto);
         }
 
+        System.out.println("**********************************");
         BufferedImage image = ImageIO.read(new File(filePath));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(image, "png", baos);
@@ -72,10 +74,10 @@ public class QRCodeServiceImpl implements QRCodeService {
         Map hintMap = new HashMap();
         hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
 
-        if(validateDto(dto).equals("Success")){
+        if(!validateDto(dto).equals("Success")){
             return validateDto(dto);
         }
-
+        System.out.println("Receiver is: " + dto.getReceiver());
         Map<String, String> qrCodeDataMap = Map.of(
                 "Receiver", dto.getReceiver(),
                 "Amount", dto.getAmount().toString(),
@@ -91,6 +93,7 @@ public class QRCodeServiceImpl implements QRCodeService {
 
         BitMatrix matrix = new MultiFormatWriter().encode(new String(jsonString.getBytes(charset), charset), BarcodeFormat.QR_CODE, 250, 250, hintMap);
 
+        System.out.println("Writing in path.......");
         MatrixToImageWriter.writeToPath(matrix, filePath.substring(filePath.lastIndexOf('.') + 1), FileSystems.getDefault().getPath(filePath));
 
         return "Success";
@@ -147,6 +150,7 @@ public class QRCodeServiceImpl implements QRCodeService {
             return "Qr code failed: idTransaction field is missing";
 
         }
+        System.out.println("Success");
         return "Success";
     }
 

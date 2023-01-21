@@ -55,7 +55,7 @@ public class QRCodeController {
         return new ResponseEntity<byte[]>(imageBytes, headers, HttpStatus.OK);
     }
 
-    @GetMapping("/validateQRCode")
+    @RequestMapping(method = RequestMethod.POST, value = "/validateQRCode")
     public ResponseEntity<?> validateQRCode(@RequestBody ValidateQRCodeDTO qr) {
 
         try {
@@ -65,6 +65,7 @@ public class QRCodeController {
                 System.out.println("No QR Code found in the image");
                 return new ResponseEntity<>(decodedText, HttpStatus.BAD_REQUEST);
             } else {
+                System.out.println("Qr code is valid!");
                 return new ResponseEntity<>("Qr code is valid!", HttpStatus.OK);
             }
         } catch (IOException e) {
