@@ -78,7 +78,10 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "port": 5000
+            "port": 5000,
+            "ssl": true,
+            "sslKey": "ssl/server.key",
+            "sslCert": "ssl/server.crt"
           },
           "configurations": {
             "production": {

@@ -33,6 +33,11 @@ server:
   port: 8090
   servlet:
     context-path: /bank1
+  ssl:
+    key-store: classpath:local-ssl.p12
+    key-store-password: password
+    keyStoreType: PKCS12
+    keyAlias: local_ssl
 
 bank:
   name: 'Bank 1'
@@ -47,3 +52,4 @@ psp:
 
 pcc:
   pcc-request: 'http://localhost:8092/pcc/request/validateAndRedirect'
+
