@@ -23,10 +23,12 @@
             <mat-label>Card holder name</mat-label>
             <input matInput name="cardHolderName" [(ngModel)]="client.bankAccount.creditCard.cardHolderName" disabled style="width: 500px;"><br><br>
         </mat-form-field>
-        <mat-form-field class="example-form-field" appearance="fill">
+        <mat-form-field class="example-form-field"  appearance="fill" style="justify-content: center; margin: auto" >
             <mat-label>PAN</mat-label>
-            <input matInput name="pan" [(ngModel)]="client.bankAccount.creditCard.pan" disabled ><br><br>
-            <button mat-button class="primary" (click)="changeVisibilityOfPan()">PAN</button>
+                <input matInput name="pan" [(ngModel)]="client.bankAccount.creditCard.pan" disabled >
+                <button mat-button matSuffix aria-label="password" (click)="changeVisibilityOfPan()" style="margin: 5px">
+                    <mat-icon style="margin: 5px">{{visiblityPan}}</mat-icon>
+                </button>
         </mat-form-field>
         <div style="display: inline; margin: auto;">
             <h4></h4>
@@ -43,5 +45,8 @@
             <mat-label>CVV/CVC</mat-label>
             <input matInput name="cvv" [(ngModel)]="client.bankAccount.creditCard.cvv" disabled><br><br>
         </mat-form-field>
+        <div style="margin: auto; display: flex; justify-content: center; margin-top: 40px;">
+            <img src="../../../assets/img/pci_dss.svg" style="width: 100px;">
+        </div>
     </div>
 </div>

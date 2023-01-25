@@ -30,16 +30,27 @@ export class PersonalInfoComponent implements OnInit {
 
   }
 
+  visiblityPan: string = 'visibility_on';
   changeVisibilityOfPan() {
     this.panIsVisible = !this.panIsVisible;
+    this.changeButtonIcon(this.panIsVisible);
     if(this.panIsVisible) {
       this.client.bankAccount.creditCard.pan = this.pan
     } else {
       this.client.bankAccount.creditCard.pan = this.hidePan(this.pan)
     }
+    
   }
 
   hidePan(pan: string) {
     return pan.substring(0, 4) + "xxxxxxxxxxxx"
+  }
+
+  changeButtonIcon(panIsVisible: boolean) {
+    if (panIsVisible) {
+      this.visiblityPan = 'visibility_off';
+    } else {
+      this.visiblityPan = 'visibility_on';
+    }
   }
 }

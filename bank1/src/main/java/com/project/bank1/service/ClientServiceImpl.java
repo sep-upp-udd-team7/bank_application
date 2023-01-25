@@ -8,10 +8,7 @@ import com.project.bank1.model.ClientType;
 import com.project.bank1.model.VerificationToken;
 import com.project.bank1.repository.ClientRepository;
 import com.project.bank1.security.util.TokenUtils;
-import com.project.bank1.service.interfaces.BankAccountService;
-import com.project.bank1.service.interfaces.ClientService;
-import com.project.bank1.service.interfaces.ClientTypeService;
-import com.project.bank1.service.interfaces.VerificationTokenService;
+import com.project.bank1.service.interfaces.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -51,6 +48,8 @@ public class ClientServiceImpl implements ClientService {
     private AuthenticationManager authenticationManager;
     @Autowired
     private TokenUtils tokenUtils;
+    @Autowired
+    private CreditCardService creditCardService;
 
     @Override
     public UserTokenStateDto registerClient(ClientRegistrationDto dto) throws Exception {
@@ -79,6 +78,7 @@ public class ClientServiceImpl implements ClientService {
         }
         clientRepository.save(client);
         loggerService.successLog(MessageFormat.format("Client with email: {0} is successfully registered", dto.getEmail()));
+
         Client c = clientRepository.findByEmail(client.getEmail());
         client.setBankAccount(bankAccountService.addBankAccount(c));
         VerificationToken verificationToken = new VerificationToken(client);
@@ -163,7 +163,9 @@ public class ClientServiceImpl implements ClientService {
             throw new Exception("Client with " + email + " not found!");
         }
         loggerService.successLog(MessageFormat.format("Client with email: {0} found", email));
-        return new ClientMapper().mapClientToClientDto(client);
+        ClientDto dto = new ClientMapper().mapClientToClientDto(client);
+        dto.getBankAccount().getCreditCard().setPan(creditCardService.decodePan(dto.getBankAccount().getCreditCard().getPan()));
+        return dto;
     }
 
     @Override

@@ -129,11 +129,18 @@ public class BankAccountServiceImpl implements BankAccountService {
             if (c != null && environment.getProperty("bank.name").equals(dto.getBankName())) {
                 loggerService.debugLog("Issuer and acquirer are in the same bank");
                 dto.setCardHolderName(c.getName());
-                dto.setPan(c.getBankAccount().getCreditCard().getPan());
+                dto.setPan(creditCardService.decodePan(c.getBankAccount().getCreditCard().getPan())); // TODO SD: decode pan number?
                 dto.setCvv(c.getBankAccount().getCreditCard().getCvv());
                 dto.setYy(c.getBankAccount().getCreditCard().getYy());
                 dto.setMm(c.getBankAccount().getCreditCard().getMm());
             }
+        }
+        Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
+        if (transaction == null) {
+            loggerService.errorLog(MessageFormat.format("Transaction with ID: {0} not found", dto.getPaymentId()));
+            transaction.setStatus(TransactionStatus.ERROR);
+            transactionService.save(transaction);
+            return finishPayment(transaction).getBody();
         }
 
         if (!isIssuerInSameBankAsAcquirer(dto.getPan())) {
@@ -141,13 +148,7 @@ public class BankAccountServiceImpl implements BankAccountService {
             PccResponseDto pccResponse = createAndSendPccRequest(dto);
             loggerService.debugLog(MessageFormat.format("Request sent to PCC for execution payment with ID: {0}", dto.getPaymentId()));
 
-            Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
-            if (transaction == null) {
-                loggerService.errorLog(MessageFormat.format("Transaction with ID: {0} not found", dto.getPaymentId()));
-                transaction.setStatus(TransactionStatus.ERROR);
-                transactionService.save(transaction);
-                return finishPayment(transaction).getBody();
-            }
+
             transaction.setAcquirerOrderId(pccResponse.getAcquirerOrderId());
             transaction.setAcquirerTimestamp(pccResponse.getAcquirerTimestamp());
             transaction.setIssuerTimestamp(pccResponse.getIssuerTimestamp());
@@ -161,7 +162,7 @@ public class BankAccountServiceImpl implements BankAccountService {
                 transactionService.save(transaction);
                 return finishPayment(transaction).getBody();
             }
-            else if(pccResponse.getTransactionStatus().equals(TransactionStatus.ERROR.toString())){
+            else if (pccResponse.getTransactionStatus().equals(TransactionStatus.ERROR.toString())){
                 loggerService.errorLog("There was an ERROR in issuer bank");
                 transaction.setStatus(TransactionStatus.ERROR);
                 transactionService.save(transaction);
@@ -180,14 +181,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         }
 
         loggerService.debugLog("Issuer and acquirer are in the same bank");
-        Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
-        if (transaction == null) {
-            loggerService.errorLog(MessageFormat.format("Transaction with ID: {0} not found", dto.getPaymentId()));
-            transaction.setStatus(TransactionStatus.ERROR);
-            transactionService.save(transaction);
-            return finishPayment(transaction).getBody();
-        }
-
         CreditCard issuerCreditCard = creditCardService.validateIssuerCreditCard(dto);
         if (issuerCreditCard == null) {
             loggerService.errorLog("The issuer's credit card credentials are incorrect or or the credit card has expired");
@@ -229,7 +222,6 @@ public class BankAccountServiceImpl implements BankAccountService {
 
         ResponseEntity<String> pspApplicationResponse = finishPayment(transaction);
         return pspApplicationResponse.getBody();
-
     }
 
     private ResponseEntity<String> finishPayment(Transaction transaction) {
@@ -247,8 +239,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         return pspApplicationResponse;
     }
 
-
-
     private ResponseDto getRequestDtoForPspApplication(Transaction transaction) {
         loggerService.debugLog("Creating body for request");
         ResponseDto dto = new ResponseDto();
@@ -264,7 +254,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         }
         return dto;
     }
-
 
     private void reserveFunds(BankAccount issuerBankAccount, Double amount) {
         loggerService.infoLog("Reserving funds by bank account with ID: " + issuerBankAccount.getId());
@@ -294,7 +283,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         return false;
     }
 
-
     private String generateRandomString(int targetStringLength) {
         loggerService.infoLog(MessageFormat.format("Generating random string with a length of {0} characters", targetStringLength));
         int leftLimit = 97; // letter 'a'
@@ -307,7 +295,6 @@ public class BankAccountServiceImpl implements BankAccountService {
                 .toString();
         return generatedString;
     }
-
 
     private PccRequestDto createPccRequest(IssuerRequestDto dto){
         Transaction transaction = transactionService.findByPaymentId(dto.getPaymentId());
@@ -336,8 +323,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         return pccRequest;
     }
 
-
-
     private ResponseEntity<PccResponseDto> sendRequestToPcc(PccRequestDto requestForPccApplication) {
         ResponseEntity<PccResponseDto> pccApplicationResponse = WebClient.builder()
                 .build().post()
@@ -355,8 +340,8 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     public PccResponseDto issuerPaymentDifferentBanks(PccRequestDto dto) {
-        String msgs = "Payment when acquirer != issuer started!";
-        System.out.println(msgs);
+        String message = "Payment when acquirer != issuer started!";
+        System.out.println(message);
 
         Transaction transaction = transactionService.createTransactionForIssuer(dto);
         if(dto.getIssuer() != null && dto.getBankName() != null){
@@ -434,7 +419,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         return ir;
     }
 
-
     private PccResponseDto createResponseToPcc(Transaction transaction){
         PccResponseDto pccResponseDto = new PccResponseDto();
         pccResponseDto.setTransactionStatus(transaction.getStatus().toString());
@@ -466,7 +450,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         reserveFunds(issuerBankAccount, dto.getAmount());
         issuerBankAccount.setReservedFunds(issuerBankAccount.getReservedFunds() - dto.getAmount());
         bankAccountRepository.save(issuerBankAccount);
-
         return true;
     }
 
