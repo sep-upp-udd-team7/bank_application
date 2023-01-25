@@ -13,13 +13,13 @@ export class PersonalInfoComponent implements OnInit {
   client: Client;
   isCompany: boolean;
   pan: string = '';
+  panIsVisible: boolean = false;
 
   ngOnInit(): void {
     this.authService.getLoggedUser().subscribe(data => {
       this.client = data
       this.pan = this.client.bankAccount.creditCard.pan;
-      let tempPan = this.pan.substring(0, 4) + "xxxxxxxxxxxx"
-      this.client.bankAccount.creditCard.pan = tempPan;
+      this.client.bankAccount.creditCard.pan = this.hidePan(this.pan);
       if (this.client.merchantId != "") {
         this.isCompany = true;
       } else {
@@ -30,4 +30,16 @@ export class PersonalInfoComponent implements OnInit {
 
   }
 
+  changeVisibilityOfPan() {
+    this.panIsVisible = !this.panIsVisible;
+    if(this.panIsVisible) {
+      this.client.bankAccount.creditCard.pan = this.pan
+    } else {
+      this.client.bankAccount.creditCard.pan = this.hidePan(this.pan)
+    }
+  }
+
+  hidePan(pan: string) {
+    return pan.substring(0, 4) + "xxxxxxxxxxxx"
+  }
 }

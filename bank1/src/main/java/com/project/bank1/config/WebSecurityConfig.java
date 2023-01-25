@@ -61,13 +61,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("**/pay**").permitAll()
                 .antMatchers("**/generate**").permitAll()
                 .antMatchers("**/registration").permitAll()
-                .antMatchers("**/getQR").permitAll()  // ??
-                .antMatchers("**/getQRCode").permitAll() // ??
-                .antMatchers("**/getQRCodeData/**").permitAll() // ??
+                .antMatchers("**/getQR").permitAll()
+                .antMatchers("**/getQRCode").permitAll()
+                .antMatchers("**/getQRCodeData/**").permitAll()
                 .antMatchers("**/login").permitAll()
                 .antMatchers("**/validateAcquirer").permitAll()
                 .antMatchers("**/validateIssuer").permitAll()
-                .antMatchers("**/issuerBankPayment").permitAll()  // ??
+                .antMatchers("**/issuerBankPayment").permitAll()
                 .antMatchers("**/h2-console/**").permitAll()
 
                 .anyRequest().authenticated().and()
