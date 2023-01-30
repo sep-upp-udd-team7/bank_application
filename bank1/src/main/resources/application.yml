@@ -1,6 +1,6 @@
 spring:
- # profiles:
-  #  active: bank2
+  profiles:
+    active: bank2
   application:
     name: bank1-service
   main:
@@ -43,13 +43,13 @@ bank:
   name: 'Bank 1'
   pan: 525150
   frontend:
-    url: 'http://localhost:3000/'
+    url: 'https://localhost:3000/'
     credit-card-data-module: 'credit-card'
     qr-code: 'qr-code'
 
 psp:
-  finish-payment: 'http://localhost:8000/bank-service/credit-cards/finishPayment'
+  finish-payment: 'https://localhost:8000/bank-service/credit-cards/finishPayment'
 
 pcc:
-  pcc-request: 'http://localhost:8092/pcc/request/validateAndRedirect'
+  pcc-request: 'https://localhost:8092/pcc/request/validateAndRedirect'
 

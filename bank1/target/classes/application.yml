@@ -1,6 +1,6 @@
 spring:
- # profiles:
-  #  active: bank2
+  profiles:
+    active: bank2
   application:
     name: bank1-service
   main:

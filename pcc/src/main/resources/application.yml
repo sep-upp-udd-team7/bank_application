@@ -27,6 +27,11 @@ server:
   port: 8092
   servlet:
     context-path: /pcc
+  ssl:
+    key-store: classpath:local-ssl.p12
+    key-store-password: password
+    keyStoreType: PKCS12
+    keyAlias: local_ssl
 
 #eureka:
 #  client:
@@ -34,13 +39,13 @@ server:
 #      default-zone: http://eureka:password@localhost:8761/eureka
 
 issuer-bank:
-  pay: 'http://localhost:8099/bank2/accounts/issuerBankPayment'
+  pay: 'https://localhost:8099/bank2/accounts/issuerBankPayment'
 
 bank1-application:
-  backend: 'http://localhost:8090/bank1/accounts/issuerBankPayment'
+  backend: 'https://localhost:8090/bank1/accounts/issuerBankPayment'
   pan: '525150'
 
 bank2-application:
-  backend: 'http://localhost:8099/bank2/accounts/issuerBankPayment'
+  backend: 'https://localhost:8099/bank2/accounts/issuerBankPayment'
   pan: '987654'
 
