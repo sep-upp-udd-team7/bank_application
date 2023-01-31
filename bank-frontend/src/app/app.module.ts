@@ -17,6 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { QrCodeComponent } from './components/qr-code/qr-code.component';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,7 @@ import { QrCodeComponent } from './components/qr-code/qr-code.component';
     SignUpComponent,
     CardInfoComponent,
     PersonalInfoComponent,
-    QrCodeComponent
+    QrCodeComponent,
   ],
   imports: [
     BrowserModule,
@@ -39,6 +40,7 @@ import { QrCodeComponent } from './components/qr-code/qr-code.component';
     MatIconModule,
     MatInputModule,
     BrowserAnimationsModule,
+    MatToolbarModule, 
   ],
   providers: [
     {

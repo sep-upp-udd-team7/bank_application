@@ -1,5 +1,7 @@
 package com.project.bank1.security.auth;
 
+import com.project.bank1.dto.ApiKeyDto;
+import com.project.bank1.model.Client;
 import com.project.bank1.security.util.TokenUtils;
 import com.project.bank1.service.CustomClientDetailsService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -55,6 +57,25 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                         // 5. Kreiraj autentifikaciju
                         TokenBasedAuthentication authentication = new TokenBasedAuthentication(userDetails);
                         authentication.setToken(authToken);
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
+                }
+            } else {
+                // TODO SD: PROVERITI!!!
+                // onda preko API key-a
+                String apiKeyToken = tokenUtils.getApiKey(request);
+                if (apiKeyToken != null) {
+                    ApiKeyDto apiKeyDto = tokenUtils.decodeApiKey(apiKeyToken);
+                    System.out.println(apiKeyDto.getMerchantId());
+
+                    // provera da li postoji client sa tim merchant id-jem
+                    Client client = userDetailsService.isMerchantIdCorrect(apiKeyDto.getMerchantId());
+                    if (client != null) {
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(client.getUsername());
+
+                        // 5. Kreiraj autentifikaciju
+                        TokenBasedAuthentication authentication = new TokenBasedAuthentication(userDetails);
+                        authentication.setToken(apiKeyToken);
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 }

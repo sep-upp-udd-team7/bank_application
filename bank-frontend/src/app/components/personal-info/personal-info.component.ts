@@ -12,10 +12,14 @@ export class PersonalInfoComponent implements OnInit {
   constructor(private authService: AuthService) { }
   client: Client;
   isCompany: boolean;
+  pan: string = '';
+  panIsVisible: boolean = false;
 
   ngOnInit(): void {
     this.authService.getLoggedUser().subscribe(data => {
       this.client = data
+      this.pan = this.client.bankAccount.creditCard.pan;
+      this.client.bankAccount.creditCard.pan = this.hidePan(this.pan);
       if (this.client.merchantId != "") {
         this.isCompany = true;
       } else {
@@ -26,8 +30,27 @@ export class PersonalInfoComponent implements OnInit {
 
   }
 
-  generateAPIKey() {
-    alert('TODO')
+  visiblityPan: string = 'visibility_on';
+  changeVisibilityOfPan() {
+    this.panIsVisible = !this.panIsVisible;
+    this.changeButtonIcon(this.panIsVisible);
+    if(this.panIsVisible) {
+      this.client.bankAccount.creditCard.pan = this.pan
+    } else {
+      this.client.bankAccount.creditCard.pan = this.hidePan(this.pan)
+    }
+    
   }
 
+  hidePan(pan: string) {
+    return pan.substring(0, 4) + "xxxxxxxxxxxx"
+  }
+
+  changeButtonIcon(panIsVisible: boolean) {
+    if (panIsVisible) {
+      this.visiblityPan = 'visibility_off';
+    } else {
+      this.visiblityPan = 'visibility_on';
+    }
+  }
 }

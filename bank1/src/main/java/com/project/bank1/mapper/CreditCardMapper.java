@@ -2,6 +2,7 @@ package com.project.bank1.mapper;
 
 import com.project.bank1.dto.CreditCardDto;
 import com.project.bank1.model.CreditCard;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class CreditCardMapper {
     public CreditCardDto mapCreditCardToCreditCardDto(CreditCard cc) {

@@ -14,15 +14,21 @@ h4 {
 }
 
 .example-form-field1 {
-    width: 1050px;
+    width: 1100px;
     justify-content: center;
     display: block;
 }
 
 .example-form-field {
-    width: 950px;
+    // width: 1000px;
+    width: 1017px;
     margin: auto;
     display: flex;
     justify-content: center;
 }
-  
+
+
+.div.mat-form-field{
+    width: 800px;
+}
+
