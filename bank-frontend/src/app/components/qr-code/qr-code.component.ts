@@ -54,9 +54,21 @@ export class QrCodeComponent implements OnInit {
       "bankName": this.bankName
     }
 
-    this.creditCardService.validateIssuer(JSON.stringify(body)).subscribe(
+    let dto = {
+      "qr": this.imagePath
+    }
+
+    this.qrCodeService.validateQrCode(JSON.stringify(dto)).subscribe(
       data => { 
         console.log(data)
+      }, err => {
+        console.log(err.error);
+      }
+    );
+
+
+    this.creditCardService.validateIssuer(JSON.stringify(body)).subscribe(
+      data => { 
         window.location.href = data
       }, err => {
         console.log(err)
@@ -65,6 +77,9 @@ export class QrCodeComponent implements OnInit {
         }
       }
     );
+
+
+
   }
 
 }

@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
@@ -39,78 +40,130 @@ public class QRCodeServiceImpl implements QRCodeService {
     @Autowired
     TransactionService transactionService;
 
-    @Override
-    public void generateQRCodeImage(String text, int width, int height, String filePath) throws WriterException, IOException {
-        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
-
-        Path path = FileSystems.getDefault().getPath(filePath);
-
-        MatrixToImageWriter.writeToPath(bitMatrix, "PNG", path);
-    }
 
 
-//    public byte[] getQRCodeImage(String text, int width, int height) throws WriterException, IOException {
-//        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-//        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
-//
-//        ByteArrayOutputStream pngOutputStream = new ByteArrayOutputStream();
-//        MatrixToImageConfig con = new MatrixToImageConfig( 0xFF000002 , 0xFFFFC041 ) ;
-//
-//        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream,con);
-//        return pngOutputStream.toByteArray();
-//    }
 
     @Override
     public String qrCodeGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException, InvalidKeySpecException, NoSuchAlgorithmException {
         String filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png").toString();
-        String charset = "UTF-8";
-        Map hintMap = new HashMap();
-        hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
 
-        Map<String, String> qrCodeDataMap = Map.of(
-                "Primalac", dto.getReceiver(),
-                "Cena", dto.getAmount().toString(),
-                "Racun primaoca", dto.getAccountNumber(),
-                "Id transakcije", dto.getIdTransaction()
-        );
+        System.out.println("grCodeGenerator Service.....");
+        if(!createQRCode(dto).equals("Success")){
+            return createQRCode(dto);
+        }
 
-        String jsonString = new JSONObject(qrCodeDataMap).toString();
-        createQRCode(jsonString, filePath, charset, hintMap, 500, 500);
-
+        System.out.println("**********************************");
         BufferedImage image = ImageIO.read(new File(filePath));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(image, "png", baos);
         return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 
-    private void createQRCode(String qrCodeData,
-                              String filePath,
-                              String charset,
-                              Map hintMap,
-                              int qrCodeHeight,
-                              int qrCodeWidth) throws WriterException,
-            IOException {
-
-        BitMatrix matrix = new MultiFormatWriter().encode(
-                new String(qrCodeData.getBytes(charset), charset),
-                BarcodeFormat.QR_CODE,
-                qrCodeWidth,
-                qrCodeHeight,
-                hintMap
-        );
-
-        MatrixToImageWriter.writeToPath(
-                matrix,
-                filePath.substring(filePath.lastIndexOf('.') + 1),
-                FileSystems.getDefault().getPath(filePath)
-        );
+    @Override
+    public byte[] qrCodeImageGenerator(GenerateQRCodeDTO dto) throws IOException, WriterException {
+        if(!createQRCode(dto).equals("Success")){
+            return null;
+        }
+        Path filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png");
+        return Files.readAllBytes(filePath);
     }
 
+    private String createQRCode(GenerateQRCodeDTO dto) throws WriterException, IOException {
+        String filePath = Paths.get(FileSystems.getDefault().getPath("").toAbsolutePath().toString(), "bank1", "src", "main", "resources", "qr.png").toString();
+        String charset = "UTF-8";
+        Map hintMap = new HashMap();
+        hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+
+        if(!validateDto(dto).equals("Success")){
+            return validateDto(dto);
+        }
+        System.out.println("Receiver is: " + dto.getReceiver());
+        Map<String, String> qrCodeDataMap = Map.of(
+                "Receiver", dto.getReceiver(),
+                "Amount", dto.getAmount().toString(),
+                "Bank account", dto.getAccountNumber(),
+                "Id transaction", dto.getIdTransaction()
+        );
+        JSONObject json = new JSONObject(qrCodeDataMap);
+        String jsonString = new JSONObject(qrCodeDataMap).toString();
+
+        if(!validateJson(json).equals("Success")){
+            return validateJson(json);
+        }
+
+        BitMatrix matrix = new MultiFormatWriter().encode(new String(jsonString.getBytes(charset), charset), BarcodeFormat.QR_CODE, 250, 250, hintMap);
+
+        System.out.println("Writing in path.......");
+        MatrixToImageWriter.writeToPath(matrix, filePath.substring(filePath.lastIndexOf('.') + 1), FileSystems.getDefault().getPath(filePath));
+
+        return "Success";
+    }
+
+    private String validateJson(JSONObject json){
+        if(json.length() != 4){
+            return "Qr code failed: json object contains more than 4 key/value pairs!";
+        }
+
+        String amount = json.getString("Amount");
+        String receiver = json.getString("Receiver");
+        String bankAccount = json.getString("Bank account");
+        String idTransaction = json.getString("Id transaction");
+
+        //Amount
+        try {
+            double a = Double.parseDouble(amount);
+            if(a < 0){
+                return "Qr code failed: amount is less than 0!";
+            }
+        } catch (NumberFormatException nfe) {
+            return "Qr code failed: amount is not a number!";
+        }
+
+        if(!idTransaction.matches("[a-zA-Z0-9]+")){
+            return "Qr code failed: Id transaction can only contain letters and numbers!";
+        }
+
+        if(!receiver.matches("[a-zA-Z0-9 ]+")){
+            return "Qr code failed: Id transaction can only contain letters, numbers and space!";
+        }
+
+        if(!bankAccount.matches("[0-9]+")){
+            return "Qr code failed: bank account number is not a number!";
+        }
+
+        return "Success";
+    }
+
+    private String validateDto(GenerateQRCodeDTO dto){
+        if(dto.getAmount()==null){
+            return "Qr code failed: amount field is missing";
+        }
+        if(dto.getReceiver()==null){
+            return "Qr code failed: receiver field is missing";
+
+        }
+        if(dto.getAccountNumber() ==null){
+            return "Qr code failed: bankAccount field is missing";
+
+        }
+        if(dto.getIdTransaction()==null){
+            return "Qr code failed: idTransaction field is missing";
+
+        }
+        System.out.println("Success");
+        return "Success";
+    }
 
     @Override
-    public Boolean decodeQRCode(String qr) throws IOException {
-        byte[] decodedBytes = Base64.getMimeDecoder().decode(qr);
+    public String decodeQRCode(String qr) throws IOException, IllegalArgumentException {
+        byte[] decodedBytes = null;
+        try{
+            decodedBytes = Base64.getMimeDecoder().decode(qr);
+
+        }catch (IllegalArgumentException e) {
+            System.out.println("There is no QR code in the image");
+            return "Qr code failed: There is no QR code in the image";
+        }
         BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(decodedBytes));
 
         LuminanceSource source = new BufferedImageLuminanceSource(bufferedImage);
@@ -118,26 +171,27 @@ public class QRCodeServiceImpl implements QRCodeService {
 
         try {
             Result result = new MultiFormatReader().decode(bitmap);
-            System.out.println("DEKODIRANO" + result);
+            System.out.println("Decoded" + result);
 
             JSONObject json = new JSONObject(result.getText());
-            System.out.println("JSON:" + json);
-            System.out.println("CENA:" + json.getString("Cena"));
 
-            //TODO: provjeriti sva ostala polja i prebrojati ih
+            if(!validateJson(json).equals("Success")){
+                return validateJson(json);
+            }
 
-            return true;
+            return "Success";
         } catch (NotFoundException e) {
             System.out.println("There is no QR code in the image");
-            return false;
+            return "Qr code failed: There is no QR code in the image";
         }
     }
+
 
     @Override
     public GenerateQRCodeDTO getQrCodeData(String paymentId) {
         Transaction t = transactionService.findByPaymentId(paymentId.toString());
         GenerateQRCodeDTO qr = new GenerateQRCodeDTO();
-        qr.setAmount(t.getAmount());
+        qr.setAmount(t.getAmount().toString());
         qr.setReceiver(t.getBankAccount().getClient().getName());
         qr.setAccountNumber(t.getBankAccount().getBankAccountNumber());
         qr.setIdTransaction(t.getId());

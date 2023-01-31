@@ -28,4 +28,16 @@ export class QrCodeService {
     return this.http.post<any>(`${this.qrCodeController}/getQRCode`, data, HTTPOptions);
   }
 
+
+  validateQrCode(data){
+    const headers = new HttpHeaders({
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+   });
+    let HTTPOptions: Object = {
+      headers: headers,  
+    }
+    return this.http.post<string>(`${this.qrCodeController}/validateQRCode`, data, HTTPOptions);
+  }
+
 }
