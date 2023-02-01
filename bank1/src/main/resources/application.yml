@@ -38,7 +38,7 @@ bank:
   name: 'Bank 1'
   pan: 525150
   frontend:
-    url: 'http://localhost:3000/'
+    url: 'http://192.168.238.103:3000/'
     credit-card-data-module: 'credit-card'
     qr-code: 'qr-code'
 
